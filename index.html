@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Group Pitch Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root{
+  --bg:#eef0ec; --surface:#ffffff; --sunk:#e3e7e2; --ink:#141b18; --muted:#5a6661; --line:#cfd6d1;
+  --accent:#2343d1; --accent-ink:#ffffff; --mark:#f2cf3a; --mark-ink:#2a2300;
+  --ok:#17784a; --warn:#a2560b; --bad:#b4232a;
+  --display:"Archivo","Arial Narrow",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0e1312; --surface:#161d1b; --sunk:#1d2522; --ink:#e7ece9; --muted:#95a39d; --line:#2b3532;
+  --accent:#7d95ff; --accent-ink:#0b1130; --mark:#e5c43c; --mark-ink:#241e00;
+  --ok:#5bc98f; --warn:#e3a053; --bad:#f07a7f; color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+[hidden]{display:none!important}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:20px;padding-block:20px 64px;display:grid;gap:22px}
+h1,h2,h3{font-family:var(--display);font-stretch:78%;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:clamp(28px,5vw,40px);font-weight:850;line-height:1}
+h2{font-size:22px;font-weight:800}
+h3{font-size:16px;font-weight:700}
+p{margin:0}
+.muted{color:var(--muted)} .small{font-size:13px}
+.label{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 20px;padding-bottom:16px;border-bottom:2px solid var(--ink)}
+.top .left{display:grid;gap:6px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:13px;font-weight:500}
+.chip .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.chip.collect .dot{background:var(--warn)} .chip.voting .dot{background:var(--accent)} .chip.results .dot{background:var(--ok)}
+.notice{padding:12px 14px;border-radius:10px;background:var(--sunk);border-left:4px solid var(--warn);font-size:14px}
+.notice.err{border-left-color:var(--bad)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:grid;gap:16px;min-width:0}
+.panel.host{border:2px solid var(--ink)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.spread{justify-content:space-between}
+button{font:inherit;font-weight:600;font-size:14px;border-radius:9px;padding:9px 14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px;line-height:1.2}
+button:hover:not(:disabled){border-color:var(--ink)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button.danger{color:var(--bad);border-color:currentColor}
+button.danger.solid{background:var(--bad);color:var(--surface);border-color:var(--bad)}
+button.ghost{border-color:transparent;background:transparent;padding-inline:8px}
+button:disabled{opacity:.45;cursor:not-allowed}
+input[type=text],select{font:inherit;padding:9px 12px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink);min-width:0}
+input[type=text]{width:min(320px,100%)}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.step{padding:10px 12px;display:flex;gap:10px;align-items:center;background:var(--bg);font-size:14px;font-weight:500;color:var(--muted)}
+.step+.step{border-left:1px solid var(--line)}
+.step b{font-family:var(--mono);font-size:12px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;border:1px solid currentColor;flex:none}
+.step.on{background:var(--ink);color:var(--bg)} .step.done{color:var(--ink)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:560px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:500;background:var(--bg)}
+tr:last-child td{border-bottom:0}
+td.fn{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.tile{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:8px;align-content:start;min-width:0}
+.tile .gnum{font-family:var(--display);font-stretch:62%;font-weight:900;font-size:44px;line-height:.9}
+.tile .meta{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.tile.mine{border:2px solid var(--ink)}
+.tile.voted{box-shadow:inset 0 -6px 0 var(--mark)}
+.tile.empty .gnum{color:var(--line)}
+.tile .tag{position:absolute;top:12px;right:12px}
+.pill{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;border-radius:999px;background:var(--sunk);color:var(--muted);white-space:nowrap}
+.pill.ok{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}
+.pill.you{background:var(--ink);color:var(--bg)}
+.pill.vote{background:var(--mark);color:var(--mark-ink)}
+.tile .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.tile .acts button{padding:7px 11px;font-size:13px}
+.pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px}
+.pick button{justify-content:center;font-family:var(--display);font-stretch:70%;font-weight:800;font-size:22px;padding:12px 0}
+.pick button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pick button.taken{text-decoration:line-through}
+.drop{border:2px dashed var(--line);border-radius:12px;padding:22px;display:grid;gap:8px;justify-items:start;background:var(--bg)}
+.drop.over{border-color:var(--accent)}
+.drop input[type=file]{font:inherit;font-size:14px;max-width:100%}
+.bar{height:6px;border-radius:3px;background:var(--sunk);overflow:hidden;width:100%}
+.bar i{display:block;height:100%;background:var(--accent);width:0}
+.res{display:grid;gap:10px}
+.res .r{display:grid;grid-template-columns:76px minmax(0,1fr) 48px;gap:12px;align-items:center}
+.res .r .g{font-family:var(--display);font-stretch:70%;font-weight:850;font-size:20px}
+.res .r .track{height:26px;background:var(--sunk);border-radius:6px;overflow:hidden}
+.res .r .track i{display:block;height:100%;background:var(--accent);border-radius:6px;min-width:2px}
+.res .r.lead .track i{background:var(--mark)}
+.res .r .c{font-family:var(--mono);font-weight:600;text-align:right}
+.winner{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline;padding:18px;border-radius:12px;background:var(--mark);color:var(--mark-ink)}
+.winner .big{font-family:var(--display);font-stretch:62%;font-weight:900;font-size:clamp(36px,8vw,64px);line-height:.9}
+.confirm{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px;border-radius:10px;background:color-mix(in srgb,var(--bad) 10%,transparent)}
+.linkbox{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;border-radius:10px;background:var(--bg);border:1px solid var(--line)}
+.linkbox code{font-family:var(--mono);font-size:13px;overflow-wrap:anywhere}
+.viewer{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column}
+.vbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;padding:10px 16px;padding-top:calc(10px + env(safe-area-inset-top,0px));border-bottom:2px solid var(--ink);background:var(--surface)}
+.vtitle{display:flex;gap:10px;align-items:baseline;min-width:0}
+.vtitle h2{white-space:nowrap}
+.vtitle span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stage{flex:1;position:relative;background:#fff}
+.stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
+.loading{position:absolute;inset:0;display:grid;place-items:center;color:#555;font-family:var(--mono);font-size:13px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:60;max-width:calc(100% - 32px)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="left"><span class="label">Business solutions showcase</span><h1>Group Pitch Board</h1></div>
+    <div class="chips">
+      <span id="phaseChip" class="chip"><span class="dot"></span><span id="phaseText">Connecting…</span></span>
+      <span id="meChip" class="chip" hidden></span>
+    </div>
+  </header>
+
+  <div id="notice" class="notice" hidden></div>
+
+  <!-- HOST SIGN-IN -->
+  <section id="hostLogin" class="panel" hidden>
+    <div><span class="label">Host</span><h2>Sign in to run the session</h2></div>
+    <p class="small muted">Only the host's Google account can open the host console.</p>
+    <div class="row"><button class="primary" id="googleBtn">Sign in with Google</button><span id="loginErr" class="small" style="color:var(--bad)"></span></div>
+  </section>
+
+  <!-- HOST CONSOLE -->
+  <section id="host" class="panel host" hidden>
+    <div class="row spread">
+      <div><span class="label">Host console</span><h2>Run the session</h2></div>
+      <div class="row"><label for="groupCount" class="small muted">Tables in play</label><select id="groupCount"></select><button class="ghost small" id="signOut">Sign out</button></div>
+    </div>
+    <div class="linkbox"><span class="small muted">Link for participants:</span><code id="shareLink"></code><button class="small" id="copyLink">Copy</button></div>
+    <div class="steps" id="steps">
+      <div class="step" data-p="collect"><b>1</b><span>Submissions</span></div>
+      <div class="step" data-p="voting"><b>2</b><span>Voting</span></div>
+      <div class="step" data-p="results"><b>3</b><span>Results</span></div>
+    </div>
+    <div class="row" id="hostActs"></div>
+    <div id="hostProgress" class="small muted" hidden></div>
+    <div id="confirmBox" class="confirm" hidden>
+      <span class="small"><strong>Start a new round?</strong> This deletes every submission and vote.</span>
+      <label class="small row" style="gap:6px"><input type="checkbox" id="clearTables"> Also clear table registrations</label>
+      <button class="danger solid" id="confirmReset">Delete and restart</button>
+      <button class="ghost" id="cancelReset">Cancel</button>
+    </div>
+    <div>
+      <div class="row spread" style="margin-bottom:8px"><h3>Tables (only you can open projects before reveal)</h3><span class="small muted" id="subCount"></span></div>
+      <div class="tablewrap"><table><thead><tr><th>Table</th><th>Representative</th><th>File</th><th>Submitted</th><th></th></tr></thead><tbody id="subRows"></tbody></table></div>
+    </div>
+    <div>
+      <div class="row spread" style="margin-bottom:8px"><h3>Live vote count</h3><span class="small muted" id="voteCount"></span></div>
+      <div class="res" id="hostTally"></div>
+    </div>
+  </section>
+
+  <!-- REGISTER -->
+  <section id="join" class="panel" hidden>
+    <div><span class="label">Registration</span><h2>Register your table</h2></div>
+    <p class="small muted">Pick your table number and enter the name of the one person representing your table. Use this same device to upload and vote.</p>
+    <div class="row"><input type="text" id="nameInput" placeholder="Representative's full name" maxlength="60" autocomplete="name"></div>
+    <div class="pick" id="pick"></div>
+    <div class="row"><button class="primary" id="joinBtn" disabled>Register table</button><span id="joinErr" class="small" style="color:var(--bad)"></span></div>
+  </section>
+
+  <!-- MY TABLE -->
+  <section id="mine" class="panel" hidden>
+    <div><span class="label">Your table</span><h2 id="mineTitle"></h2></div>
+    <p class="small muted" id="mineStatus"></p>
+    <div class="drop" id="drop">
+      <strong>Upload your table's HTML file</strong>
+      <span class="small muted">Made with any AI tool (ChatGPT, Claude, Gemini, Copilot and others). Save the result as a .html file, up to 5 MB. Uploading again replaces the earlier file. Nobody sees it until the host reveals all projects.</span>
+      <input type="file" id="fileInput" accept=".html,.htm,text/html">
+      <div class="bar" id="upBar" hidden><i></i></div>
+      <span class="small" id="upMsg"></span>
+    </div>
+    <div class="row" id="mineActs"></div>
+  </section>
+
+  <!-- BOARD -->
+  <section style="display:grid;gap:14px">
+    <div class="row spread">
+      <div><span class="label" id="boardEyebrow">The board</span><h2 id="boardTitle">Tables</h2></div>
+      <p class="small muted" id="boardSub" style="max-width:52ch"></p>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section id="results" class="panel" hidden>
+    <div><span class="label">Final count</span><h2>Results</h2></div>
+    <div id="winner"></div>
+    <div class="res" id="tally"></div>
+  </section>
+</div>
+
+<div id="viewer" class="viewer" hidden role="dialog" aria-modal="true" aria-labelledby="vGroup">
+  <div class="vbar">
+    <div class="vtitle"><h2 id="vGroup"></h2><span class="small muted" id="vFile"></span></div>
+    <div class="row">
+      <button id="vPrev" aria-label="Previous project">←</button>
+      <button id="vNext" aria-label="Next project">→</button>
+      <button id="vFull">Full screen</button>
+      <button id="vVote" class="primary" hidden></button>
+      <button id="vClose">Close</button>
+    </div>
+  </div>
+  <div class="stage"><div class="loading" id="vLoading">Loading project…</div>
+    <iframe id="vFrame" title="Table project" allow="fullscreen; clipboard-write" allowfullscreen
+      sandbox="allow-scripts allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-downloads allow-pointer-lock"></iframe></div>
+</div>
+<div id="toast" class="toast" hidden></div>
+
+<script type="module">
+/* =====================================================================
+   SETUP: paste your Firebase web config below. Host emails must
+   match the list in firestore.rules.
+   ===================================================================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyAlEZg09QgJclsX-JZnkrw0LEQA0uhwUZA",
+  authDomain: "ips-insight.firebaseapp.com",
+  projectId: "ips-insight",
+  storageBucket: "ips-insight.firebasestorage.app",
+  messagingSenderId: "675981271813",
+  appId: "1:675981271813:web:a2c845621868e6941dcd6c"
+};
+const HOST_EMAILS = ["arefhammami7@gmail.com", "mohammad.awad@iinn.com"];
+/* ===================================================================== */
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInAnonymously, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, collection, onSnapshot, getDoc, setDoc, updateDoc, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const p2 = n => String(n).padStart(2, '0');
+const p3 = n => String(n).padStart(3, '0');
+const tid = n => 't' + p2(n);
+const CHUNK = 250000, MAXBYTES = 5 * 1024 * 1024;
+const PHASES = { collect: 'Submissions open', voting: 'Voting open', results: 'Results' };
+const time = at => at ? new Date(at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+const HOST_MODE = location.hash.replace('#', '').toLowerCase() === 'host';
+const shareUrl = location.origin + location.pathname;
+
+const S = { cfg: { groups: 15, phase: 'collect', round: 1 }, cfgExists: false, tables: {}, votes: {}, uid: null, isHost: false,
+  ready: false, busy: false, confirm: false, pick: null, fatal: '' };
+const htmlCache = new Map();
+let db, auth, unsubs = [];
+
+function toast(m) { const t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 2800); }
+function errText(e) {
+  const c = e && e.code || '';
+  if (c.includes('permission-denied')) return 'That action isn\'t allowed right now. The host may have closed this step.';
+  if (c.includes('resource-exhausted')) return 'The free database limit was reached for today. Tell the host.';
+  if (c.includes('unavailable')) return 'Connection problem. Check your internet and try again.';
+  return 'Something went wrong. Try again.';
+}
+const groupsInPlay = () => Array.from({ length: S.cfg.groups }, (_, i) => i + 1);
+const myTable = () => { for (const [k, t] of Object.entries(S.tables)) if (t.uid === S.uid) return { id: k, ...t }; return null; };
+function tally() {
+  const counts = {}; let total = 0;
+  for (const [voter, v] of Object.entries(S.votes)) {
+    if (!v || !v.forTable || v.forTable === voter) continue;
+    if (!S.tables[v.forTable]?.fileName) continue;
+    counts[v.forTable] = (counts[v.forTable] || 0) + 1; total++;
+  }
+  const rows = groupsInPlay().filter(n => S.tables[tid(n)]?.fileName)
+    .map(n => ({ n, c: counts[tid(n)] || 0 })).sort((a, b) => b.c - a.c || a.n - b.n);
+  return { rows, total };
+}
+
+/* make sandboxed projects behave: provide in-memory storage when the browser blocks it */
+const SHIM = `<script>(function(){function mk(){var d={};return{getItem:function(k){return Object.prototype.hasOwnProperty.call(d,k)?d[k]:null},setItem:function(k,v){d[k]=String(v)},removeItem:function(k){delete d[k]},clear:function(){d={}},key:function(i){return Object.keys(d)[i]||null},get length(){return Object.keys(d).length}}}['localStorage','sessionStorage'].forEach(function(n){try{window[n].getItem('x')}catch(e){try{Object.defineProperty(window,n,{value:mk(),configurable:true})}catch(_){}}});try{document.cookie}catch(e){try{Object.defineProperty(document,'cookie',{get:function(){return''},set:function(){},configurable:true})}catch(_){}}})();<\/script>`;
+function prepare(html) {
+  const m = html.match(/<head[^>]*>/i) || html.match(/<html[^>]*>/i);
+  if (m) { const i = m.index + m[0].length; return html.slice(0, i) + SHIM + html.slice(i); }
+  const d = html.match(/^\s*<!doctype[^>]*>/i);
+  if (d) return d[0] + SHIM + html.slice(d[0].length);
+  return SHIM + html;
+}
+
+async function readChunks(t, n) {
+  const parts = await Promise.all(Array.from({ length: n }, (_, i) => getDoc(doc(db, 'subs', t, 'chunks', 'c' + p3(i)))));
+  return parts.map(s => s.exists() ? s.data().d : '').join('');
+}
+
+/* ---------- render ---------- */
+function render() {
+  const ph = S.cfg.phase;
+  $('#phaseChip').className = 'chip ' + (S.ready ? ph : '');
+  $('#phaseText').textContent = S.fatal ? 'Not connected' : S.ready ? PHASES[ph] : 'Connecting…';
+  const mt = myTable(), mc = $('#meChip');
+  if (S.isHost) { mc.hidden = false; mc.textContent = 'Host'; }
+  else if (mt) { mc.hidden = false; mc.textContent = `Table ${p2(mt.table)} · ${mt.rep}`; }
+  else mc.hidden = true;
+  const n = $('#notice');
+  if (S.fatal) { n.hidden = false; n.className = 'notice err'; n.textContent = S.fatal; }
+  else if (S.ready && S.isHost && !S.cfgExists) { n.hidden = false; n.className = 'notice'; n.textContent = 'First run: set the number of tables, then press Open registration.'; }
+  else n.hidden = true;
+  $('#hostLogin').hidden = !(HOST_MODE && !S.isHost && !S.fatal);
+  renderHost(); renderJoin(); renderMine(); renderBoard(); renderResults();
+}
+
+function renderHost() {
+  $('#host').hidden = !S.isHost || !S.ready; if ($('#host').hidden) return;
+  const ph = S.cfg.phase, order = ['collect', 'voting', 'results'];
+  document.querySelectorAll('#steps .step').forEach(el => {
+    const i = order.indexOf(el.dataset.p), c = order.indexOf(ph);
+    el.className = 'step' + (i === c ? ' on' : i < c ? ' done' : '');
+  });
+  const sel = $('#groupCount');
+  if (sel.options.length !== 15) sel.innerHTML = Array.from({ length: 15 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join('');
+  if (document.activeElement !== sel) sel.value = String(S.cfg.groups);
+  $('#shareLink').textContent = shareUrl;
+  const subs = groupsInPlay().filter(n => S.tables[tid(n)]?.fileName).length;
+  const b = S.busy ? 'disabled' : '';
+  const acts = [];
+  if (!S.cfgExists) acts.push(`<button class="primary" data-a="open" ${b}>Open registration</button>`);
+  else if (ph === 'collect') acts.push(`<button class="primary" data-a="voting" ${S.busy || !subs ? 'disabled' : ''}>Reveal ${subs} project${subs === 1 ? '' : 's'} and open voting</button>`);
+  else if (ph === 'voting') { acts.push(`<button class="primary" data-a="results" ${b}>Close voting and show results</button>`); acts.push(`<button data-a="collect" ${b}>Back to submissions (hides projects)</button>`); }
+  else acts.push(`<button data-a="voting" ${b}>Reopen voting</button>`);
+  if (S.cfgExists) acts.push(`<button class="danger" data-a="reset" ${b}>Start a new round</button>`);
+  $('#hostActs').innerHTML = acts.join('');
+  $('#confirmBox').hidden = !S.confirm;
+  const reg = groupsInPlay().filter(n => S.tables[tid(n)]).length;
+  $('#subCount').textContent = `${reg} registered · ${subs} submitted`;
+  $('#subRows').innerHTML = groupsInPlay().map(n => {
+    const t = S.tables[tid(n)];
+    return `<tr><td class="num"><strong>${p2(n)}</strong></td>
+      <td>${t ? esc(t.rep) : '<span class="muted">Not registered</span>'}</td>
+      <td class="fn" title="${esc(t?.fileName)}">${t?.fileName ? esc(t.fileName) : ''}</td>
+      <td class="num">${t?.fileName ? time(t.submittedAt) : ''}</td>
+      <td class="row" style="gap:4px">${t?.fileName ? `<button class="ghost small" data-open="${n}">Preview</button>` : ''}${t ? `<button class="ghost small" data-release="${n}" ${b}>Release</button>` : ''}</td></tr>`;
+  }).join('');
+  const t = tally();
+  $('#voteCount').textContent = `${t.total} vote${t.total === 1 ? '' : 's'} counted`;
+  $('#hostTally').innerHTML = t.rows.length ? tallyRows(t) : '<p class="small muted">Counts appear once tables submit projects.</p>';
+}
+function tallyRows(t) {
+  const max = Math.max(1, ...t.rows.map(r => r.c)), top = t.rows[0]?.c || 0;
+  return t.rows.map(r => `<div class="r ${r.c && r.c === top ? 'lead' : ''}"><span class="g">Table ${p2(r.n)}</span><span class="track"><i style="width:${r.c / max * 100}%"></i></span><span class="c">${r.c}</span></div>`).join('');
+}
+
+function renderJoin() {
+  const show = S.ready && !HOST_MODE && !S.isHost && S.uid && !myTable() && S.cfgExists;
+  $('#join').hidden = !show; if (!show) return;
+  $('#pick').innerHTML = groupsInPlay().map(n => {
+    const taken = !!S.tables[tid(n)];
+    return `<button data-pick="${n}" class="${taken ? 'taken' : ''}" ${taken ? 'disabled title="Already registered"' : ''} aria-pressed="${S.pick === n}">${p2(n)}</button>`;
+  }).join('');
+  if (S.pick && S.tables[tid(S.pick)]) S.pick = null;
+  updateJoinBtn();
+}
+function updateJoinBtn() {
+  $('#joinBtn').disabled = S.busy || !S.pick || !$('#nameInput').value.trim();
+  $('#joinBtn').textContent = S.pick ? `Register Table ${p2(S.pick)}` : 'Register table';
+}
+
+function renderMine() {
+  const mt = myTable(), show = S.ready && !!mt && !S.isHost;
+  $('#mine').hidden = !show; if (!show) return;
+  const ph = S.cfg.phase;
+  $('#mineTitle').textContent = `Table ${p2(mt.table)}`;
+  $('#mineStatus').textContent = `Representative: ${mt.rep}. ` + (mt.fileName ? `Submitted ${mt.fileName} at ${time(mt.submittedAt)}.` : 'Nothing submitted yet.');
+  $('#drop').hidden = ph !== 'collect';
+  $('#fileInput').disabled = S.busy;
+  $('#mineActs').innerHTML = (mt.fileName ? `<button data-open="${mt.table}">Preview our upload</button>` : '') + (ph !== 'collect' ? '<span class="small muted">Submissions are closed.</span>' : '');
+}
+
+function renderBoard() {
+  const ph = S.cfg.phase, mt = myTable(), myVote = mt ? S.votes[mt.id] : null;
+  if (!S.ready) { $('#boardSub').textContent = S.fatal ? '' : 'Loading…'; $('#grid').innerHTML = ''; return; }
+  if (!S.cfgExists) { $('#boardEyebrow').textContent = 'Not open yet'; $('#boardTitle').textContent = 'Tables'; $('#boardSub').textContent = 'The host hasn\'t opened registration yet. Keep this page open; it updates by itself.'; $('#grid').innerHTML = ''; return; }
+  if (ph === 'collect') {
+    $('#boardEyebrow').textContent = 'Submissions sealed'; $('#boardTitle').textContent = 'Who has submitted';
+    $('#boardSub').textContent = 'Projects stay hidden until the host reveals them. You can only see which tables have turned something in.';
+    $('#grid').innerHTML = groupsInPlay().map(n => {
+      const t = S.tables[tid(n)], mine = mt && mt.table === n;
+      return `<div class="tile ${mine ? 'mine' : ''} ${t?.fileName ? '' : 'empty'}">
+        <span class="tag">${mine ? '<span class="pill you">You</span>' : t?.fileName ? '<span class="pill ok">In</span>' : t ? '<span class="pill">Registered</span>' : '<span class="pill">Open</span>'}</span>
+        <span class="gnum">${p2(n)}</span><span class="meta">${t ? esc(t.rep) : 'Not registered'}${t?.fileName ? ` · in at ${time(t.submittedAt)}` : ''}</span></div>`;
+    }).join('');
+    return;
+  }
+  const canVote = ph === 'voting' && mt;
+  $('#boardEyebrow').textContent = ph === 'voting' ? 'Voting open' : 'Voting closed';
+  $('#boardTitle').textContent = 'Projects';
+  $('#boardSub').textContent = ph === 'voting'
+    ? (mt ? 'Open each project, then cast your table\'s one vote for the best business solution. You can\'t vote for your own table, and you can change your vote until voting closes.' : 'Anyone can open the projects. Only registered tables can vote.')
+    : 'Voting has closed. Projects stay open for viewing.';
+  $('#grid').innerHTML = groupsInPlay().map(n => {
+    const t = S.tables[tid(n)], mine = mt && mt.table === n, voted = myVote && myVote.forTable === tid(n);
+    if (!t?.fileName) return `<div class="tile empty"><span class="tag"><span class="pill">No entry</span></span><span class="gnum">${p2(n)}</span><span class="meta">No project submitted</span></div>`;
+    return `<div class="tile ${mine ? 'mine' : ''} ${voted ? 'voted' : ''}">
+      <span class="tag">${voted ? '<span class="pill vote">Your vote</span>' : mine ? '<span class="pill you">You</span>' : ''}</span>
+      <span class="gnum">${p2(n)}</span><span class="meta">${esc(t.rep)} · ${esc(t.fileName)}</span>
+      <div class="acts"><button data-open="${n}">Open</button>
+      ${canVote && !mine ? `<button class="${voted ? '' : 'primary'}" data-vote="${n}" ${voted || S.busy ? 'disabled' : ''}>${voted ? 'Voted' : 'Vote'}</button>` : ''}</div></div>`;
+  }).join('');
+}
+
+function renderResults() {
+  const show = S.ready && S.cfg.phase === 'results';
+  $('#results').hidden = !show; if (!show) return;
+  const t = tally(), top = t.rows[0], leaders = t.rows.filter(r => top && r.c === top.c && r.c > 0);
+  $('#winner').innerHTML = leaders.length
+    ? `<div class="winner"><span class="label" style="color:inherit">${leaders.length > 1 ? 'Tie for first' : 'Best business solution'}</span><span class="big">${leaders.map(r => 'Table ' + p2(r.n)).join(' & ')}</span><span class="num">${top.c} vote${top.c === 1 ? '' : 's'} of ${t.total}</span></div>`
+    : '<p class="muted">No votes were cast.</p>';
+  $('#tally').innerHTML = tallyRows(t);
+}
+
+/* ---------- viewer ---------- */
+let vOrder = [], vIndex = -1, vTable = null;
+async function openProject(n) {
+  const t = S.tables[tid(n)]; if (!t?.fileName) return;
+  vTable = n;
+  vOrder = S.cfg.phase === 'collect' ? [n] : groupsInPlay().filter(x => S.tables[tid(x)]?.fileName);
+  vIndex = vOrder.indexOf(n);
+  $('#viewer').hidden = false; document.body.style.overflow = 'hidden';
+  $('#vGroup').textContent = `Table ${p2(n)}`; $('#vFile').textContent = `${t.rep} · ${t.fileName}`;
+  $('#vLoading').hidden = false; $('#vLoading').textContent = 'Loading project…';
+  const fr = $('#vFrame'); fr.srcdoc = '';
+  syncVote();
+  try {
+    const key = `${n}/${t.submittedAt}`;
+    if (!htmlCache.has(key)) htmlCache.set(key, prepare(await readChunks(tid(n), t.chunks)));
+    if (vTable !== n) return;
+    fr.srcdoc = htmlCache.get(key); $('#vLoading').hidden = true;
+  } catch (e) { $('#vLoading').textContent = 'Could not load this project. ' + errText(e); }
+}
+function syncVote() {
+  const mt = myTable(), btn = $('#vVote'), n = vTable;
+  const can = S.cfg.phase === 'voting' && mt && n && n !== mt.table;
+  btn.hidden = !can;
+  if (can) { const voted = S.votes[mt.id]?.forTable === tid(n); btn.textContent = voted ? 'Your vote' : `Vote for Table ${p2(n)}`; btn.disabled = voted || S.busy; btn.className = voted ? '' : 'primary'; }
+  $('#vPrev').hidden = $('#vNext').hidden = vOrder.length < 2;
+}
+function closeViewer() { $('#viewer').hidden = true; $('#vFrame').srcdoc = ''; document.body.style.overflow = ''; vTable = null; }
+function step(d) { if (vOrder.length < 2) return; vIndex = (vIndex + d + vOrder.length) % vOrder.length; openProject(vOrder[vIndex]); }
+
+/* ---------- actions ---------- */
+async function register() {
+  const rep = $('#nameInput').value.trim(), n = S.pick; if (!rep || !n) return;
+  S.busy = true; updateJoinBtn(); $('#joinErr').textContent = '';
+  try {
+    await setDoc(doc(db, 'tables', tid(n)), { table: n, rep, uid: S.uid, at: Date.now() });
+    toast(`Table ${p2(n)} registered`); S.pick = null;
+  } catch (e) {
+    $('#joinErr').textContent = (e.code || '').includes('permission') ? `Table ${p2(n)} was just taken. If that's your table, ask the host to release it.` : errText(e);
+  }
+  S.busy = false; render();
+}
+
+async function upload(file) {
+  const msg = $('#upMsg'), bar = $('#upBar'), mt = myTable(); msg.style.color = '';
+  if (!file || !mt) return;
+  if (!/\.html?$/i.test(file.name)) { msg.style.color = 'var(--bad)'; msg.textContent = 'That isn\'t an HTML file. Save your project as a file ending in .html and try again.'; return; }
+  if (file.size > MAXBYTES) { msg.style.color = 'var(--bad)'; msg.textContent = `That file is ${(file.size / 1048576).toFixed(1)} MB. The limit is 5 MB.`; return; }
+  S.busy = true; render(); bar.hidden = false;
+  try {
+    const text = await file.text(), n = Math.max(1, Math.ceil(text.length / CHUNK));
+    for (let i = 0; i < n; i++) {
+      await setDoc(doc(db, 'subs', mt.id, 'chunks', 'c' + p3(i)), { d: text.slice(i * CHUNK, (i + 1) * CHUNK) });
+      bar.firstElementChild.style.width = ((i + 1) / n * 100) + '%'; msg.textContent = `Uploading… ${i + 1}/${n}`;
+    }
+    const at = Date.now();
+    await setDoc(doc(db, 'subs', mt.id), { table: mt.table, fileName: file.name, size: file.size, chunks: n, at });
+    await updateDoc(doc(db, 'tables', mt.id), { fileName: file.name, chunks: n, submittedAt: at });
+    msg.textContent = `Submitted ${file.name}. It stays hidden until the host reveals all projects.`;
+  } catch (e) { msg.style.color = 'var(--bad)'; msg.textContent = errText(e); }
+  bar.hidden = true; $('#fileInput').value = ''; S.busy = false; render();
+}
+
+async function vote(n) {
+  const mt = myTable(); if (!mt || n === mt.table) return;
+  S.busy = true; render(); syncVote();
+  try { await setDoc(doc(db, 'votes', mt.id), { voter: mt.id, forTable: tid(n), at: Date.now() }); toast(`Vote saved for Table ${p2(n)}`); }
+  catch (e) { toast(errText(e)); }
+  S.busy = false; render(); if (!$('#viewer').hidden) syncVote();
+}
+
+const setCfg = patch => setDoc(doc(db, 'config', 'state'), { ...S.cfg, ...patch });
+function progress(t) { const el = $('#hostProgress'); el.hidden = !t; el.textContent = t || ''; }
+
+async function clearTable(id, alsoRegistration) {
+  const t = S.tables[id];
+  const chunks = await getDocs(collection(db, 'subs', id, 'chunks'));
+  for (const c of chunks.docs) await deleteDoc(c.ref);
+  await deleteDoc(doc(db, 'subs', id));
+  await deleteDoc(doc(db, 'votes', id));
+  if (alsoRegistration) await deleteDoc(doc(db, 'tables', id));
+  else if (t?.fileName) await setDoc(doc(db, 'tables', id), { table: t.table, rep: t.rep, uid: t.uid, at: t.at });
+}
+async function newRound() {
+  const all = $('#clearTables').checked; S.busy = true; S.confirm = false; render();
+  try {
+    for (const id of Object.keys(S.tables)) { progress(`Clearing table ${id.slice(1)}…`); await clearTable(id, all); }
+    for (const id of Object.keys(S.votes)) await deleteDoc(doc(db, 'votes', id));
+    await setCfg({ phase: 'collect', round: (S.cfg.round || 1) + 1 });
+    htmlCache.clear(); toast('New round started.');
+  } catch (e) { toast(errText(e)); }
+  progress(''); $('#clearTables').checked = false; S.busy = false; render();
+}
+async function release(n) {
+  S.busy = true; render();
+  try { progress(`Releasing table ${p2(n)}…`); await clearTable(tid(n), true); toast(`Table ${p2(n)} released`); } catch (e) { toast(errText(e)); }
+  progress(''); S.busy = false; render();
+}
+async function hostAction(a) {
+  if (a === 'reset') { S.confirm = true; return render(); }
+  S.busy = true; render();
+  try { await setCfg(a === 'open' ? { phase: 'collect' } : { phase: a }); } catch (e) { toast(errText(e)); }
+  S.busy = false; render();
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t || t.disabled) return;
+  if (t.dataset.pick) { S.pick = Number(t.dataset.pick); renderJoin(); return; }
+  if (t.dataset.open) return openProject(Number(t.dataset.open));
+  if (t.dataset.vote) return vote(Number(t.dataset.vote));
+  if (t.dataset.a) return hostAction(t.dataset.a);
+  if (t.dataset.release) return release(Number(t.dataset.release));
+});
+$('#joinBtn').addEventListener('click', register);
+$('#nameInput').addEventListener('input', updateJoinBtn);
+$('#nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') register(); });
+$('#fileInput').addEventListener('change', e => upload(e.target.files[0]));
+const drop = $('#drop');
+['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => { if (!S.busy) upload(e.dataTransfer.files[0]); });
+$('#groupCount').addEventListener('change', async e => { try { await setCfg({ groups: Number(e.target.value) }); } catch (err) { toast(errText(err)); } });
+$('#confirmReset').addEventListener('click', newRound);
+$('#cancelReset').addEventListener('click', () => { S.confirm = false; render(); });
+$('#copyLink').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(shareUrl); toast('Link copied'); }
+  catch { const r = document.createRange(); r.selectNodeContents($('#shareLink')); getSelection().removeAllRanges(); getSelection().addRange(r); }
+});
+$('#vClose').addEventListener('click', closeViewer);
+$('#vPrev').addEventListener('click', () => step(-1));
+$('#vNext').addEventListener('click', () => step(1));
+$('#vVote').addEventListener('click', () => vTable && vote(vTable));
+$('#vFull').addEventListener('click', () => { const f = $('#vFrame'); (f.requestFullscreen ? f.requestFullscreen() : Promise.reject()).catch(() => toast('Full screen isn\'t available on this device.')); });
+document.addEventListener('keydown', e => {
+  if ($('#viewer').hidden) return;
+  if (e.key === 'Escape' && !document.fullscreenElement) closeViewer();
+  if (e.key === 'ArrowLeft') step(-1);
+  if (e.key === 'ArrowRight') step(1);
+});
+$('#googleBtn').addEventListener('click', async () => {
+  $('#loginErr').textContent = '';
+  try { await signInWithPopup(auth, new GoogleAuthProvider()); }
+  catch (e) { $('#loginErr').textContent = 'Sign-in did not finish. Allow pop-ups for this site and try again.'; }
+});
+$('#signOut').addEventListener('click', async () => { await signOut(auth); location.hash = ''; location.reload(); });
+window.addEventListener('hashchange', () => location.reload());
+
+/* ---------- boot ---------- */
+function subscribe() {
+  unsubs.forEach(u => u()); unsubs = [];
+  const fail = e => { S.fatal = 'Lost connection to the board. Refresh the page.'; render(); };
+  unsubs.push(onSnapshot(doc(db, 'config', 'state'), s => {
+    S.cfgExists = s.exists(); S.cfg = { groups: 15, phase: 'collect', round: 1, ...(s.exists() ? s.data() : {}) };
+    S.ready = true; render(); if (!$('#viewer').hidden) syncVote();
+  }, fail));
+  unsubs.push(onSnapshot(collection(db, 'tables'), q => { S.tables = {}; q.forEach(d => S.tables[d.id] = d.data()); render(); }, fail));
+  unsubs.push(onSnapshot(collection(db, 'votes'), q => { S.votes = {}; q.forEach(d => S.votes[d.id] = d.data()); render(); }, fail));
+}
+
+if (firebaseConfig.apiKey.startsWith('PASTE')) {
+  S.fatal = 'Setup isn\'t finished: paste your Firebase config into index.html.'; render();
+} else {
+  const app = initializeApp(firebaseConfig);
+  auth = getAuth(app); db = getFirestore(app);
+  render();
+  let subscribed = false;
+  onAuthStateChanged(auth, async u => {
+    if (!u) {
+      if (!HOST_MODE) { try { await signInAnonymously(auth); } catch (e) { S.fatal = 'Could not connect. Check your internet and refresh.'; render(); } }
+      else render();
+      return;
+    }
+    S.uid = u.uid;
+    S.isHost = !!u.email && HOST_EMAILS.some(h => h.toLowerCase() === u.email.toLowerCase());
+    if (HOST_MODE && u.email && !S.isHost) { $('#loginErr').textContent = 'That Google account isn\'t the host account.'; await signOut(auth); return; }
+    if (HOST_MODE && !S.isHost) { render(); return; }
+    if (!subscribed) { subscribed = true; subscribe(); }
+    render();
+  });
+}
+</script>
+</body>
+</html>
