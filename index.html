@@ -3,131 +3,260 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Group Pitch Board</title>
+<title>AI Build Challenge</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 :root{
-  --bg:#eef0ec; --surface:#ffffff; --sunk:#e3e7e2; --ink:#141b18; --muted:#5a6661; --line:#cfd6d1;
-  --accent:#2343d1; --accent-ink:#ffffff; --mark:#f2cf3a; --mark-ink:#2a2300;
-  --ok:#17784a; --warn:#a2560b; --bad:#b4232a;
-  --display:"Archivo","Arial Narrow",system-ui,sans-serif;
-  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
-  color-scheme:light;
+  --bg:#f3f6f9; --surface:#ffffff; --sunk:#e9eef3; --ink:#0f1e2b; --muted:#5b6b79; --line:#dbe3ea;
+  --navy:#0b2b45; --blue:#008ec5; --blue-ink:#ffffff; --orange:#f68b1e; --orange-ink:#2b1500;
+  --ok:#1a8a55; --warn:#c46a06; --bad:#c0392b;
+  --font:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:14px; color-scheme:light;
 }
-@media (prefers-color-scheme: dark){:root{
-  --bg:#0e1312; --surface:#161d1b; --sunk:#1d2522; --ink:#e7ece9; --muted:#95a39d; --line:#2b3532;
-  --accent:#7d95ff; --accent-ink:#0b1130; --mark:#e5c43c; --mark-ink:#241e00;
-  --ok:#5bc98f; --warn:#e3a053; --bad:#f07a7f; color-scheme:dark}}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0a1622; --surface:#11212f; --sunk:#172a3a; --ink:#e8eef3; --muted:#93a4b3; --line:#24394b;
+  --blue:#38b2e6; --blue-ink:#04121c; --orange:#ff9f3d; --ok:#4cc58a; --warn:#f0a050; --bad:#f07a7f; color-scheme:dark}}
 *{box-sizing:border-box}
 html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
 [hidden]{display:none!important}
-.wrap{max-width:1080px;margin:0 auto;padding-inline:20px;padding-block:20px 64px;display:grid;gap:22px}
-h1,h2,h3{font-family:var(--display);font-stretch:78%;margin:0;text-wrap:balance;letter-spacing:-.01em}
-h1{font-size:clamp(28px,5vw,40px);font-weight:850;line-height:1}
-h2{font-size:22px;font-weight:800}
-h3{font-size:16px;font-weight:700}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 72px;display:grid;grid-template-columns:minmax(0,1fr);gap:20px}
+.wrap > *{min-width:0}
+h1,h2,h3{margin:0;letter-spacing:-.02em;text-wrap:balance}
+h1{font-size:clamp(26px,4.6vw,38px);font-weight:800;line-height:1.05}
+h2{font-size:21px;font-weight:800}
+h3{font-size:15px;font-weight:700}
 p{margin:0}
 .muted{color:var(--muted)} .small{font-size:13px}
-.label{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
-.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
-.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 20px;padding-bottom:16px;border-bottom:2px solid var(--ink)}
-.top .left{display:grid;gap:6px}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--orange)}
+.num{font-variant-numeric:tabular-nums}
+
+/* header */
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 20px}
+.brand{display:flex;align-items:center;gap:14px;min-width:0}
+.mark{width:46px;height:46px;border-radius:12px;background:var(--navy);display:grid;place-items:center;flex:none}
+.mark svg{width:26px;height:26px}
 .chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:13px;font-weight:500}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:13px;font-weight:600}
 .chip .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
-.chip.collect .dot{background:var(--warn)} .chip.voting .dot{background:var(--accent)} .chip.results .dot{background:var(--ok)}
-.notice{padding:12px 14px;border-radius:10px;background:var(--sunk);border-left:4px solid var(--warn);font-size:14px}
-.notice.err{border-left-color:var(--bad)}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:grid;gap:16px;min-width:0}
-.panel.host{border:2px solid var(--ink)}
+.chip.collect .dot{background:var(--orange)} .chip.showcase .dot,.chip.voting .dot{background:var(--blue)} .chip.results .dot{background:var(--ok)}
+
+/* timer bar */
+.tbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;border-radius:var(--r);background:var(--navy);color:#fff;box-shadow:0 6px 20px rgba(11,43,69,.18)}
+.tbar .tlabel{font-size:13px;font-weight:600;color:#bfe3f1}
+.tbar .tval{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.tbar.warn{background:#7a3d00} .tbar.crit{background:#8e1f17} .tbar.done{background:#8e1f17}
+.tbar .tprog{position:absolute;left:0;bottom:0;height:4px;background:var(--orange);border-radius:0 0 0 var(--r)}
+.tbar{overflow:hidden}
+
+.notice{padding:12px 14px;border-radius:12px;background:var(--sunk);font-size:14px;border:1px solid var(--line)}
+.notice.err{background:color-mix(in srgb,var(--bad) 12%,var(--surface));border-color:color-mix(in srgb,var(--bad) 35%,transparent)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:grid;grid-template-columns:minmax(0,1fr);gap:16px;min-width:0;box-shadow:0 1px 2px rgba(15,30,43,.04)}
 .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .spread{justify-content:space-between}
-button{font:inherit;font-weight:600;font-size:14px;border-radius:9px;padding:9px 14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px;line-height:1.2}
+button{font:inherit;font-weight:700;font-size:14px;border-radius:10px;padding:10px 15px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;line-height:1.2;transition:background .15s,border-color .15s,transform .05s}
 button:hover:not(:disabled){border-color:var(--ink)}
-button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-button.danger{color:var(--bad);border-color:currentColor}
-button.danger.solid{background:var(--bad);color:var(--surface);border-color:var(--bad)}
-button.ghost{border-color:transparent;background:transparent;padding-inline:8px}
+button:active:not(:disabled){transform:translateY(1px)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid color-mix(in srgb,var(--blue) 60%,transparent);outline-offset:2px}
+button.primary{background:var(--blue);border-color:var(--blue);color:var(--blue-ink)}
+button.primary:hover:not(:disabled){filter:brightness(1.07);border-color:var(--blue)}
+button.accent{background:var(--orange);border-color:var(--orange);color:var(--orange-ink)}
+button.accent:hover:not(:disabled){filter:brightness(1.05);border-color:var(--orange)}
+button.danger{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 45%,transparent)}
+button.danger.solid{background:var(--bad);color:#fff;border-color:var(--bad)}
+button.ghost{border-color:transparent;background:transparent;padding-inline:9px}
+button.sm{padding:7px 11px;font-size:13px}
 button:disabled{opacity:.45;cursor:not-allowed}
-input[type=text],select{font:inherit;padding:9px 12px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink);min-width:0}
-input[type=text]{width:min(320px,100%)}
-.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--line);border-radius:10px;overflow:hidden}
-.step{padding:10px 12px;display:flex;gap:10px;align-items:center;background:var(--bg);font-size:14px;font-weight:500;color:var(--muted)}
-.step+.step{border-left:1px solid var(--line)}
-.step b{font-family:var(--mono);font-size:12px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;border:1px solid currentColor;flex:none}
-.step.on{background:var(--ink);color:var(--bg)} .step.done{color:var(--ink)}
-.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
-table{border-collapse:collapse;width:100%;font-size:14px;min-width:560px}
-th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
-th{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:500;background:var(--bg)}
+input[type=text],select{font:inherit;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);min-width:0}
+input[type=text]{width:min(360px,100%)}
+.field{display:grid;gap:6px;min-width:0}
+.field label{font-size:13px;font-weight:700}
+.field input{width:100%}
+
+/* host */
+.host{border:2px solid var(--navy)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .host{border-color:var(--blue)}}
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.step{padding:10px 12px;border-radius:10px;display:flex;gap:10px;align-items:center;background:var(--bg);font-size:13px;font-weight:600;color:var(--muted);border:1px solid var(--line);min-width:0}
+.step b{font-size:12px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;border:1.5px solid currentColor;flex:none}
+.step span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.step.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.step.done{color:var(--ink)}
+.step.done b{background:var(--ok);border-color:var(--ok);color:#fff}
+@media (max-width:640px){.steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.hostgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+@media (max-width:760px){.hostgrid{grid-template-columns:1fr}}
+.card{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-content:start;min-width:0}
+.timerbig{font-size:52px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.timerbig.warn{color:var(--warn)} .timerbig.crit,.timerbig.done{color:var(--bad)}
+.join{display:flex;gap:14px;align-items:center;min-width:0}
+.qr{background:#fff;padding:8px;border-radius:10px;flex:none;line-height:0}
+.qr img,.qr canvas{display:block}
+.linkcode{font-size:13px;font-weight:600;overflow-wrap:anywhere;color:var(--blue)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:620px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;background:var(--bg)}
 tr:last-child td{border-bottom:0}
-td.fn{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
-.tile{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:8px;align-content:start;min-width:0}
-.tile .gnum{font-family:var(--display);font-stretch:62%;font-weight:900;font-size:44px;line-height:.9}
+td.clip{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.confirm{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px;border-radius:12px;background:color-mix(in srgb,var(--bad) 10%,transparent)}
+
+/* tiles */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.tile{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:6px;align-content:start;min-width:0}
+.tile .gnum{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tile .ttl{font-size:17px;font-weight:800;line-height:1.25;overflow-wrap:anywhere}
 .tile .meta{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
-.tile.mine{border:2px solid var(--ink)}
-.tile.voted{box-shadow:inset 0 -6px 0 var(--mark)}
-.tile.empty .gnum{color:var(--line)}
+.tile.mine{border:2px solid var(--blue)}
+.tile.voted{border:2px solid var(--orange)}
+.tile.empty{background:transparent;border-style:dashed}
 .tile .tag{position:absolute;top:12px;right:12px}
-.pill{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;border-radius:999px;background:var(--sunk);color:var(--muted);white-space:nowrap}
-.pill.ok{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}
-.pill.you{background:var(--ink);color:var(--bg)}
-.pill.vote{background:var(--mark);color:var(--mark-ink)}
-.tile .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
-.tile .acts button{padding:7px 11px;font-size:13px}
+.tile .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.pill{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:999px;background:var(--sunk);color:var(--muted);white-space:nowrap}
+.pill.ok{background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok)}
+.pill.you{background:var(--blue);color:var(--blue-ink)}
+.pill.vote{background:var(--orange);color:var(--orange-ink)}
 .pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px}
-.pick button{justify-content:center;font-family:var(--display);font-stretch:70%;font-weight:800;font-size:22px;padding:12px 0}
-.pick button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pick button{font-size:20px;font-weight:800;padding:12px 0}
+.pick button[aria-pressed="true"]{background:var(--navy);color:#fff;border-color:var(--navy)}
 .pick button.taken{text-decoration:line-through}
-.drop{border:2px dashed var(--line);border-radius:12px;padding:22px;display:grid;gap:8px;justify-items:start;background:var(--bg)}
-.drop.over{border-color:var(--accent)}
-.drop input[type=file]{font:inherit;font-size:14px;max-width:100%}
+.drop{border:2px dashed var(--line);border-radius:var(--r);padding:18px;display:grid;grid-template-columns:minmax(0,1fr);gap:10px;justify-items:start;background:var(--bg)}
+.drop.over{border-color:var(--blue);background:color-mix(in srgb,var(--blue) 6%,var(--bg))}
+.drop input[type=file]{font:inherit;font-size:14px;max-width:100%;min-width:0;width:100%}
+.drop .row{width:100%}
+.drop.locked{border-style:solid;border-color:color-mix(in srgb,var(--bad) 40%,transparent)}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:12px}
+@media (max-width:640px){.two{grid-template-columns:minmax(0,1fr)}.panel{padding:16px}}
 .bar{height:6px;border-radius:3px;background:var(--sunk);overflow:hidden;width:100%}
-.bar i{display:block;height:100%;background:var(--accent);width:0}
+.bar i{display:block;height:100%;background:var(--blue);width:0}
 .res{display:grid;gap:10px}
-.res .r{display:grid;grid-template-columns:76px minmax(0,1fr) 48px;gap:12px;align-items:center}
-.res .r .g{font-family:var(--display);font-stretch:70%;font-weight:850;font-size:20px}
-.res .r .track{height:26px;background:var(--sunk);border-radius:6px;overflow:hidden}
-.res .r .track i{display:block;height:100%;background:var(--accent);border-radius:6px;min-width:2px}
-.res .r.lead .track i{background:var(--mark)}
-.res .r .c{font-family:var(--mono);font-weight:600;text-align:right}
-.winner{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline;padding:18px;border-radius:12px;background:var(--mark);color:var(--mark-ink)}
-.winner .big{font-family:var(--display);font-stretch:62%;font-weight:900;font-size:clamp(36px,8vw,64px);line-height:.9}
-.confirm{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px;border-radius:10px;background:color-mix(in srgb,var(--bad) 10%,transparent)}
-.linkbox{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;border-radius:10px;background:var(--bg);border:1px solid var(--line)}
-.linkbox code{font-family:var(--mono);font-size:13px;overflow-wrap:anywhere}
+.res .r{display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr) 44px;gap:12px;align-items:center}
+.res .r .g{font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.res .r .g small{font-weight:600;color:var(--muted)}
+.res .r .track{height:24px;background:var(--sunk);border-radius:7px;overflow:hidden}
+.res .r .track i{display:block;height:100%;background:var(--blue);border-radius:7px;min-width:2px}
+.res .r.lead .track i{background:var(--orange)}
+.res .r .c{font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
+@media (max-width:560px){.res .r{grid-template-columns:minmax(0,110px) minmax(0,1fr) 34px}}
+.winner{display:grid;gap:4px;padding:20px;border-radius:var(--r);background:var(--orange);color:var(--orange-ink)}
+.winner .big{font-size:clamp(30px,7vw,52px);font-weight:800;line-height:1.05}
+
+/* participant viewer */
 .viewer{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column}
-.vbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;padding:10px 16px;padding-top:calc(10px + env(safe-area-inset-top,0px));border-bottom:2px solid var(--ink);background:var(--surface)}
-.vtitle{display:flex;gap:10px;align-items:baseline;min-width:0}
-.vtitle h2{white-space:nowrap}
-.vtitle span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.stage{flex:1;position:relative;background:#fff}
-.stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
-.loading{position:absolute;inset:0;display:grid;place-items:center;color:#555;font-family:var(--mono);font-size:13px}
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:60;max-width:calc(100% - 32px)}
+.vbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top,0px));background:var(--navy);color:#fff}
+.vbar button{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:#fff}
+.vbar button.primary{background:var(--orange);border-color:var(--orange);color:var(--orange-ink)}
+.vtitle{display:grid;min-width:0}
+.vtitle h2{font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vtitle span{font-size:13px;color:#bfe3f1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.frame{flex:1;position:relative;background:#fff}
+.frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
+.loading{position:absolute;inset:0;display:grid;place-items:center;color:#555;font-size:14px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--navy);color:#fff;padding:11px 18px;border-radius:12px;font-size:14px;font-weight:600;z-index:200;max-width:calc(100% - 32px);box-shadow:0 8px 24px rgba(0,0,0,.25)}
+
+/* ===== presenter stage (always dark, built for a projector) ===== */
+.stage{position:fixed;inset:0;z-index:100;background:#071d30;color:#fff;display:flex;flex-direction:column;overflow:hidden}
+.stage::before{content:"";position:absolute;inset:0;background:radial-gradient(1200px 600px at 85% -10%,rgba(0,142,197,.28),transparent 60%),radial-gradient(900px 500px at -10% 110%,rgba(246,139,30,.16),transparent 60%);pointer-events:none}
+.stage > *{position:relative}
+.s-top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 28px}
+.s-top .brand h2{font-size:20px}
+.s-top .brand .mark{width:40px;height:40px;background:rgba(255,255,255,.08)}
+.s-mini{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;padding:6px 14px;border-radius:10px;background:rgba(255,255,255,.08)}
+.s-mini.warn{background:#7a3d00} .s-mini.crit,.s-mini.done{background:#8e1f17}
+.s-body{flex:1;min-height:0;display:flex;flex-direction:column;padding:0 28px 24px}
+.s-center{flex:1;display:grid;place-items:center;text-align:center;align-content:center;gap:18px}
+.s-eyebrow{font-size:clamp(14px,1.4vw,20px);font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#f68b1e}
+.s-huge{font-size:clamp(110px,19vw,300px);font-weight:800;line-height:.9;font-variant-numeric:tabular-nums;letter-spacing:-.04em}
+.s-huge.warn{color:#ffb15c} .s-huge.crit{color:#ff6b5e;animation:pulse 1s ease-in-out infinite} .s-huge.done{color:#ff6b5e}
+@keyframes pulse{50%{opacity:.55}}
+.s-sub{font-size:clamp(18px,2vw,28px);color:#bfe3f1;font-weight:600}
+.s-ring{width:min(100%,720px);height:10px;border-radius:5px;background:rgba(255,255,255,.1);overflow:hidden}
+.s-ring i{display:block;height:100%;background:#f68b1e;border-radius:5px;transition:width .25s linear}
+.s-split{flex:1;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:48px;align-items:center;padding-bottom:60px}
+.s-tables{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;align-content:center}
+.s-t{border-radius:12px;padding:10px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);display:grid;gap:2px;min-width:0}
+.s-t b{font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:#93a4b3}
+.s-t span{font-size:14px;color:#bfe3f1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.s-t.in{background:rgba(26,138,85,.25);border-color:rgba(76,197,138,.6)}
+.s-t.in b{color:#7be0ad}
+.s-t.voted{background:rgba(246,139,30,.2);border-color:rgba(246,139,30,.65)}
+.s-t.voted b{color:#ffb15c}
+.s-join{display:grid;gap:14px;justify-items:center;text-align:center}
+.s-join .qr{padding:14px;border-radius:18px}
+.s-join .url{font-size:clamp(16px,1.5vw,22px);font-weight:700;color:#bfe3f1;overflow-wrap:anywhere}
+.s-show{flex:1;display:flex;flex-direction:column;gap:14px;min-height:0}
+.s-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px}
+.s-head .who{min-width:0;display:grid;gap:4px}
+.s-head h1{font-size:clamp(28px,3.2vw,46px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s-head .pitch{font-size:clamp(15px,1.4vw,20px);color:#bfe3f1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.s-clock{display:grid;justify-items:end;gap:2px;flex:none}
+.s-clock b{font-size:34px;font-variant-numeric:tabular-nums}
+.s-clock span{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#93a4b3;font-weight:700}
+.s-frame{flex:1;min-height:0;position:relative;border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+.s-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.s-frame .loading{color:#5b6b79}
+.s-strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+.s-strip button{flex:none;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#fff;font-size:13px;padding:7px 12px;max-width:220px}
+.s-strip button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.s-strip button[aria-current="true"]{background:#f68b1e;border-color:#f68b1e;color:#2b1500}
+.s-res{flex:1;display:grid;place-items:center}
+.s-res .inner{width:min(1100px,100%);display:grid;gap:26px}
+.s-win{text-align:center;display:grid;gap:16px;justify-items:center}
+.s-win .big{font-size:clamp(48px,7vw,104px);font-weight:800;line-height:1.08;letter-spacing:-.03em}
+.s-win .who{font-size:clamp(18px,2vw,28px);color:#bfe3f1;font-weight:600}
+.s-bars{display:grid;gap:12px}
+.s-bars .r{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr) 60px;gap:16px;align-items:center;font-size:20px}
+.s-bars .g{font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.s-bars .g small{color:#93a4b3;font-weight:600}
+.s-bars .track{height:30px;border-radius:8px;background:rgba(255,255,255,.08);overflow:hidden}
+.s-bars .track i{display:block;height:100%;border-radius:8px;background:#38b2e6;transition:width 1.2s cubic-bezier(.2,.8,.2,1)}
+.s-bars .r.lead .track i{background:#f68b1e}
+.s-bars .c{font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
+.confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.confetti i{position:absolute;top:-20px;width:10px;height:16px;border-radius:2px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+.dock{position:absolute;left:0;right:0;margin:0 auto;width:max-content;bottom:18px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;padding:10px;border-radius:16px;background:rgba(4,18,28,.92);border:1px solid rgba(255,255,255,.14);box-shadow:0 10px 40px rgba(0,0,0,.5);transition:opacity .25s,transform .25s;z-index:5;max-width:calc(100% - 32px)}
+.dock.hide{opacity:0;transform:translateY(12px);pointer-events:none}
+.dock button{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.16);color:#fff;font-size:13px;padding:8px 12px}
+.dock button:hover:not(:disabled){border-color:#fff}
+.dock button.primary{background:#008ec5;border-color:#008ec5}
+.dock button.accent{background:#f68b1e;border-color:#f68b1e;color:#2b1500}
+.dock .sep{width:1px;height:26px;background:rgba(255,255,255,.18);margin:0 2px}
+.s-nav{position:absolute;top:50%;transform:translateY(-50%);width:52px;height:52px;border-radius:50%;background:rgba(4,18,28,.75);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:22px;padding:0;z-index:4}
+.s-nav.l{left:8px} .s-nav.r{right:8px}
+.timesup{position:absolute;inset:0;display:grid;place-items:center;background:rgba(142,31,23,.92);z-index:6;text-align:center;animation:flash .6s ease-in-out 3}
+.timesup b{font-size:clamp(80px,14vw,220px);font-weight:800;letter-spacing:-.03em;line-height:.95}
+@keyframes flash{50%{background:rgba(246,139,30,.95)}}
+@media (prefers-reduced-motion: reduce){.s-huge.crit,.timesup{animation:none}.s-bars .track i{transition:none}.confetti{display:none}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="top">
-    <div class="left"><span class="label">Business solutions showcase</span><h1>Group Pitch Board</h1></div>
+    <div class="brand">
+      <div class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#f68b1e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 6.1L20.5 10l-6.1 2.4L12 18.5l-2.4-6.1L3.5 10l6.1-1.9z"/><path d="M19 17l.9 2.1 2.1.9-2.1.9L19 23l-.9-2.1-2.1-.9 2.1-.9z" stroke="#38b2e6"/></svg></div>
+      <div><span class="eyebrow">IPS Innovations</span><h1>AI Build Challenge</h1></div>
+    </div>
     <div class="chips">
       <span id="phaseChip" class="chip"><span class="dot"></span><span id="phaseText">Connecting…</span></span>
       <span id="meChip" class="chip" hidden></span>
     </div>
   </header>
 
+  <div id="tbar" class="tbar" hidden role="timer" aria-live="off">
+    <div><div class="tlabel" id="tbarLabel">Time left to build</div></div>
+    <div class="tval" id="tbarVal">15:00</div>
+    <i class="tprog" id="tbarProg"></i>
+  </div>
+
   <div id="notice" class="notice" hidden></div>
 
   <!-- HOST SIGN-IN -->
   <section id="hostLogin" class="panel" hidden>
-    <div><span class="label">Host</span><h2>Sign in to run the session</h2></div>
+    <div><span class="eyebrow">Host</span><h2>Sign in to run the challenge</h2></div>
     <p class="small muted">Only the host's Google account can open the host console.</p>
     <div class="row"><button class="primary" id="googleBtn">Sign in with Google</button><span id="loginErr" class="small" style="color:var(--bad)"></span></div>
   </section>
@@ -135,50 +264,78 @@ td.fn{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   <!-- HOST CONSOLE -->
   <section id="host" class="panel host" hidden>
     <div class="row spread">
-      <div><span class="label">Host console</span><h2>Run the session</h2></div>
-      <div class="row"><label for="groupCount" class="small muted">Tables in play</label><select id="groupCount"></select><button class="ghost small" id="signOut">Sign out</button></div>
+      <div><span class="eyebrow">Host console</span><h2>Run the challenge</h2></div>
+      <div class="row">
+        <button class="accent" id="openStage">▶ Presenter view</button>
+        <label for="groupCount" class="small muted">Tables</label><select id="groupCount"></select>
+        <button class="ghost sm" id="signOut">Sign out</button>
+      </div>
     </div>
-    <div class="linkbox"><span class="small muted">Link for participants:</span><code id="shareLink"></code><button class="small" id="copyLink">Copy</button></div>
     <div class="steps" id="steps">
-      <div class="step" data-p="collect"><b>1</b><span>Submissions</span></div>
-      <div class="step" data-p="voting"><b>2</b><span>Voting</span></div>
-      <div class="step" data-p="results"><b>3</b><span>Results</span></div>
+      <div class="step" data-p="collect"><b>1</b><span>Build &amp; submit</span></div>
+      <div class="step" data-p="showcase"><b>2</b><span>Showcase</span></div>
+      <div class="step" data-p="voting"><b>3</b><span>Vote</span></div>
+      <div class="step" data-p="results"><b>4</b><span>Results</span></div>
     </div>
     <div class="row" id="hostActs"></div>
     <div id="hostProgress" class="small muted" hidden></div>
     <div id="confirmBox" class="confirm" hidden>
-      <span class="small"><strong>Start a new round?</strong> This deletes every submission and vote.</span>
+      <span class="small"><strong>Start a new round?</strong> This deletes every submission and vote and resets the timer.</span>
       <label class="small row" style="gap:6px"><input type="checkbox" id="clearTables"> Also clear table registrations</label>
       <button class="danger solid" id="confirmReset">Delete and restart</button>
       <button class="ghost" id="cancelReset">Cancel</button>
     </div>
-    <div>
-      <div class="row spread" style="margin-bottom:8px"><h3>Tables (only you can open projects before reveal)</h3><span class="small muted" id="subCount"></span></div>
-      <div class="tablewrap"><table><thead><tr><th>Table</th><th>Representative</th><th>File</th><th>Submitted</th><th></th></tr></thead><tbody id="subRows"></tbody></table></div>
+    <div class="hostgrid">
+      <div class="card">
+        <div class="row spread"><h3>Build timer</h3><span class="small muted" id="timerState"></span></div>
+        <div class="timerbig" id="hostTimer">15:00</div>
+        <div class="row" id="timerActs"></div>
+        <div class="row small muted"><label for="timerLen">Length</label><select id="timerLen"></select><span>Uploads lock when it hits 0:00. Add time to reopen them.</span></div>
+      </div>
+      <div class="card">
+        <h3>Participant link</h3>
+        <div class="join"><div class="qr" id="hostQr"></div><div style="display:grid;gap:8px;min-width:0"><span class="linkcode" id="shareLink"></span><button class="sm" id="copyLink" style="justify-self:start">Copy link</button></div></div>
+      </div>
     </div>
     <div>
-      <div class="row spread" style="margin-bottom:8px"><h3>Live vote count</h3><span class="small muted" id="voteCount"></span></div>
+      <div class="row spread" style="margin-bottom:8px"><h3>Tables</h3><span class="small muted" id="subCount"></span></div>
+      <div class="tablewrap"><table><thead><tr><th>Table</th><th>Project</th><th>Representative</th><th>Submitted</th><th></th></tr></thead><tbody id="subRows"></tbody></table></div>
+    </div>
+    <div>
+      <div class="row spread" style="margin-bottom:8px"><h3>Live vote count (host only)</h3><span class="small muted" id="voteCount"></span></div>
       <div class="res" id="hostTally"></div>
     </div>
   </section>
 
   <!-- REGISTER -->
   <section id="join" class="panel" hidden>
-    <div><span class="label">Registration</span><h2>Register your table</h2></div>
+    <div><span class="eyebrow">Step 1</span><h2>Register your table</h2></div>
     <p class="small muted">Pick your table number and enter the name of the one person representing your table. Use this same device to upload and vote.</p>
-    <div class="row"><input type="text" id="nameInput" placeholder="Representative's full name" maxlength="60" autocomplete="name"></div>
+    <div class="field" style="max-width:360px"><label for="nameInput">Representative's name</label><input type="text" id="nameInput" placeholder="Full name" maxlength="60" autocomplete="name"></div>
     <div class="pick" id="pick"></div>
     <div class="row"><button class="primary" id="joinBtn" disabled>Register table</button><span id="joinErr" class="small" style="color:var(--bad)"></span></div>
   </section>
 
   <!-- MY TABLE -->
   <section id="mine" class="panel" hidden>
-    <div><span class="label">Your table</span><h2 id="mineTitle"></h2></div>
+    <div class="row spread"><div><span class="eyebrow">Your table</span><h2 id="mineTitle"></h2></div><span id="mineBadge"></span></div>
     <p class="small muted" id="mineStatus"></p>
+    <div id="howto" class="card">
+      <h3>The challenge</h3>
+      <ol class="small" style="margin:0;padding-left:18px;display:grid;gap:4px">
+        <li>Pick a real problem your team runs into at work. Anything goes.</li>
+        <li>Ask any AI tool (Claude, ChatGPT, Gemini, Copilot…) to build a <strong>single HTML file</strong> that solves it. Try: <em>"Build me a one-page HTML app that…"</em></li>
+        <li>Save it as a <strong>.html</strong> file, then upload it below before the timer runs out.</li>
+      </ol>
+    </div>
     <div class="drop" id="drop">
-      <strong>Upload your table's HTML file</strong>
-      <span class="small muted">Made with any AI tool (ChatGPT, Claude, Gemini, Copilot and others). Save the result as a .html file, up to 5 MB. Uploading again replaces the earlier file. Nobody sees it until the host reveals all projects.</span>
-      <input type="file" id="fileInput" accept=".html,.htm,text/html">
+      <div class="two" style="width:100%">
+        <div class="field"><label for="titleInput">Project name</label><input type="text" id="titleInput" maxlength="80" placeholder="e.g. Shift Swap Board"></div>
+        <div class="field"><label for="pitchInput">What problem does it solve? <span class="muted" style="font-weight:500">(one line)</span></label><input type="text" id="pitchInput" maxlength="160" placeholder="e.g. Nurses trade shifts without 20 texts"></div>
+      </div>
+      <strong id="dropHead">Upload your table's HTML file</strong>
+      <span class="small muted" id="dropHint">Up to 5 MB. Uploading again replaces the earlier file. Nobody else sees it until the showcase.</span>
+      <div class="row"><input type="file" id="fileInput" accept=".html,.htm,text/html"><button class="sm" id="saveDetails" hidden>Save name &amp; description</button></div>
       <div class="bar" id="upBar" hidden><i></i></div>
       <span class="small" id="upMsg"></span>
     </div>
@@ -187,49 +344,59 @@ td.fn{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
   <!-- BOARD -->
   <section style="display:grid;gap:14px">
-    <div class="row spread">
-      <div><span class="label" id="boardEyebrow">The board</span><h2 id="boardTitle">Tables</h2></div>
-      <p class="small muted" id="boardSub" style="max-width:52ch"></p>
+    <div class="row spread" style="align-items:flex-end">
+      <div><span class="eyebrow" id="boardEyebrow">The board</span><h2 id="boardTitle">Tables</h2></div>
+      <p class="small muted" id="boardSub" style="max-width:56ch"></p>
     </div>
     <div class="grid" id="grid"></div>
   </section>
 
   <section id="results" class="panel" hidden>
-    <div><span class="label">Final count</span><h2>Results</h2></div>
+    <div><span class="eyebrow">Final count</span><h2>Results</h2></div>
     <div id="winner"></div>
     <div class="res" id="tally"></div>
   </section>
 </div>
 
+<!-- PARTICIPANT VIEWER -->
 <div id="viewer" class="viewer" hidden role="dialog" aria-modal="true" aria-labelledby="vGroup">
   <div class="vbar">
-    <div class="vtitle"><h2 id="vGroup"></h2><span class="small muted" id="vFile"></span></div>
+    <div class="vtitle"><h2 id="vGroup"></h2><span id="vFile"></span></div>
     <div class="row">
       <button id="vPrev" aria-label="Previous project">←</button>
       <button id="vNext" aria-label="Next project">→</button>
-      <button id="vFull">Full screen</button>
       <button id="vVote" class="primary" hidden></button>
       <button id="vClose">Close</button>
     </div>
   </div>
-  <div class="stage"><div class="loading" id="vLoading">Loading project…</div>
+  <div class="frame"><div class="loading" id="vLoading">Loading project…</div>
     <iframe id="vFrame" title="Table project" allow="fullscreen; clipboard-write" allowfullscreen
       sandbox="allow-scripts allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-downloads allow-pointer-lock"></iframe></div>
+</div>
+
+<!-- PRESENTER STAGE -->
+<div id="stage" class="stage" hidden role="dialog" aria-modal="true" aria-label="Presenter view">
+  <div class="s-top">
+    <div class="brand"><div class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#f68b1e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 6.1L20.5 10l-6.1 2.4L12 18.5l-2.4-6.1L3.5 10l6.1-1.9z"/></svg></div><h2>AI Build Challenge</h2></div>
+    <div class="row"><span class="s-mini" id="sMini" hidden></span></div>
+  </div>
+  <div class="s-body" id="sBody"></div>
+  <div class="dock" id="dock"></div>
+  <div class="confetti" id="confetti"></div>
 </div>
 <div id="toast" class="toast" hidden></div>
 
 <script type="module">
 /* =====================================================================
-   SETUP: paste your Firebase web config below. Host emails must
-   match the list in firestore.rules.
+   SETUP: Firebase web config. Host emails must match firestore.rules.
    ===================================================================== */
 const firebaseConfig = {
-  apiKey: "AIzaSyAlEZg09QgJclsX-JZnkrw0LEQA0uhwUZA",
-  authDomain: "ips-insight.firebaseapp.com",
-  projectId: "ips-insight",
-  storageBucket: "ips-insight.firebasestorage.app",
-  messagingSenderId: "675981271813",
-  appId: "1:675981271813:web:a2c845621868e6941dcd6c"
+  apiKey: "AIzaSyBKXK6GZfzCGtHkxAET3FEvMiXzl_duDNE",
+  authDomain: "ips-informatics.firebaseapp.com",
+  projectId: "ips-informatics",
+  storageBucket: "ips-informatics.firebasestorage.app",
+  messagingSenderId: "580520650135",
+  appId: "1:580520650135:web:79f00c33489c35838ed0d2"
 };
 const HOST_EMAILS = ["arefhammami7@gmail.com", "mohammad.awad@iinn.com"];
 /* ===================================================================== */
@@ -243,18 +410,21 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const p2 = n => String(n).padStart(2, '0');
 const p3 = n => String(n).padStart(3, '0');
 const tid = n => 't' + p2(n);
-const CHUNK = 250000, MAXBYTES = 5 * 1024 * 1024;
-const PHASES = { collect: 'Submissions open', voting: 'Voting open', results: 'Results' };
+const CHUNK = 250000, MAXBYTES = 5 * 1024 * 1024, MIN = 60000, DEFAULT_MS = 15 * MIN;
+const PHASES = { collect: 'Building', showcase: 'Showcase', voting: 'Voting open', results: 'Results' };
+const ORDER = ['collect', 'showcase', 'voting', 'results'];
+const REVEALED = ph => ph === 'showcase' || ph === 'voting' || ph === 'results';
 const time = at => at ? new Date(at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
 const HOST_MODE = location.hash.replace('#', '').toLowerCase() === 'host';
 const shareUrl = location.origin + location.pathname;
 
 const S = { cfg: { groups: 15, phase: 'collect', round: 1 }, cfgExists: false, tables: {}, votes: {}, uid: null, isHost: false,
-  ready: false, busy: false, confirm: false, pick: null, fatal: '' };
+  ready: false, busy: false, confirm: false, pick: null, fatal: '',
+  stage: false, si: 0, reveal: false, showStart: 0, lastTimerState: '' };
 const htmlCache = new Map();
 let db, auth, unsubs = [];
 
-function toast(m) { const t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 2800); }
+function toast(m) { const t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 3200); }
 function errText(e) {
   const c = e && e.code || '';
   if (c.includes('permission-denied')) return 'That action isn\'t allowed right now. The host may have closed this step.';
@@ -263,7 +433,9 @@ function errText(e) {
   return 'Something went wrong. Try again.';
 }
 const groupsInPlay = () => Array.from({ length: S.cfg.groups }, (_, i) => i + 1);
+const submitted = () => groupsInPlay().filter(n => S.tables[tid(n)]?.fileName);
 const myTable = () => { for (const [k, t] of Object.entries(S.tables)) if (t.uid === S.uid) return { id: k, ...t }; return null; };
+const projName = t => (t && t.title) ? t.title : 'Untitled project';
 function tally() {
   const counts = {}; let total = 0;
   for (const [voter, v] of Object.entries(S.votes)) {
@@ -271,10 +443,20 @@ function tally() {
     if (!S.tables[v.forTable]?.fileName) continue;
     counts[v.forTable] = (counts[v.forTable] || 0) + 1; total++;
   }
-  const rows = groupsInPlay().filter(n => S.tables[tid(n)]?.fileName)
-    .map(n => ({ n, c: counts[tid(n)] || 0 })).sort((a, b) => b.c - a.c || a.n - b.n);
+  const rows = submitted().map(n => ({ n, c: counts[tid(n)] || 0 })).sort((a, b) => b.c - a.c || a.n - b.n);
   return { rows, total };
 }
+
+/* ---------- shared timer (stored on config/state) ---------- */
+function timer() {
+  const c = S.cfg, dur = c.timerMs || DEFAULT_MS;
+  if (c.timerEnd) { const left = Math.max(0, c.timerEnd - Date.now()); return { state: left > 0 ? 'running' : 'done', left, dur }; }
+  if (c.timerLeft != null) return { state: c.timerLeft > 0 ? 'paused' : 'done', left: Math.max(0, c.timerLeft), dur };
+  return { state: 'idle', left: dur, dur };
+}
+const fmt = ms => { const s = Math.ceil(ms / 1000); return `${Math.floor(s / 60)}:${p2(s % 60)}`; };
+const urgency = t => t.state === 'done' ? 'done' : t.left <= MIN ? 'crit' : t.left <= 5 * MIN ? 'warn' : '';
+const uploadsOpen = () => S.cfg.phase === 'collect' && timer().state !== 'done';
 
 /* make sandboxed projects behave: provide in-memory storage when the browser blocks it */
 const SHIM = `<script>(function(){function mk(){var d={};return{getItem:function(k){return Object.prototype.hasOwnProperty.call(d,k)?d[k]:null},setItem:function(k,v){d[k]=String(v)},removeItem:function(k){delete d[k]},clear:function(){d={}},key:function(i){return Object.keys(d)[i]||null},get length(){return Object.keys(d).length}}}['localStorage','sessionStorage'].forEach(function(n){try{window[n].getItem('x')}catch(e){try{Object.defineProperty(window,n,{value:mk(),configurable:true})}catch(_){}}});try{document.cookie}catch(e){try{Object.defineProperty(document,'cookie',{get:function(){return''},set:function(){},configurable:true})}catch(_){}}})();<\/script>`;
@@ -285,17 +467,28 @@ function prepare(html) {
   if (d) return d[0] + SHIM + html.slice(d[0].length);
   return SHIM + html;
 }
-
 async function readChunks(t, n) {
   const parts = await Promise.all(Array.from({ length: n }, (_, i) => getDoc(doc(db, 'subs', t, 'chunks', 'c' + p3(i)))));
   return parts.map(s => s.exists() ? s.data().d : '').join('');
+}
+async function loadHtml(n) {
+  const t = S.tables[tid(n)]; const key = `${n}/${t.submittedAt}`;
+  if (!htmlCache.has(key)) htmlCache.set(key, prepare(await readChunks(tid(n), t.chunks)));
+  return htmlCache.get(key);
+}
+function drawQr(el, size) {
+  if (!el || !window.QRCode) return;
+  const key = shareUrl + '|' + size; if (el.dataset.k === key) return;
+  el.innerHTML = ''; el.dataset.k = key;
+  new QRCode(el, { text: shareUrl, width: size, height: size, colorDark: '#0b2b45', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+  el.title = '';
 }
 
 /* ---------- render ---------- */
 function render() {
   const ph = S.cfg.phase;
-  $('#phaseChip').className = 'chip ' + (S.ready ? ph : '');
-  $('#phaseText').textContent = S.fatal ? 'Not connected' : S.ready ? PHASES[ph] : 'Connecting…';
+  $('#phaseChip').className = 'chip ' + (S.ready && S.cfgExists ? ph : '');
+  $('#phaseText').textContent = S.fatal ? 'Not connected' : !S.ready ? 'Connecting…' : !S.cfgExists ? 'Not open yet' : PHASES[ph];
   const mt = myTable(), mc = $('#meChip');
   if (S.isHost) { mc.hidden = false; mc.textContent = 'Host'; }
   else if (mt) { mc.hidden = false; mc.textContent = `Table ${p2(mt.table)} · ${mt.rep}`; }
@@ -305,51 +498,68 @@ function render() {
   else if (S.ready && S.isHost && !S.cfgExists) { n.hidden = false; n.className = 'notice'; n.textContent = 'First run: set the number of tables, then press Open registration.'; }
   else n.hidden = true;
   $('#hostLogin').hidden = !(HOST_MODE && !S.isHost && !S.fatal);
-  renderHost(); renderJoin(); renderMine(); renderBoard(); renderResults();
+  renderHost(); renderJoin(); renderMine(); renderBoard(); renderResults(); renderStage(); tick();
 }
 
 function renderHost() {
   $('#host').hidden = !S.isHost || !S.ready; if ($('#host').hidden) return;
-  const ph = S.cfg.phase, order = ['collect', 'voting', 'results'];
+  const ph = S.cfg.phase, c = S.cfgExists ? ORDER.indexOf(ph) : -1;
   document.querySelectorAll('#steps .step').forEach(el => {
-    const i = order.indexOf(el.dataset.p), c = order.indexOf(ph);
+    const i = ORDER.indexOf(el.dataset.p);
     el.className = 'step' + (i === c ? ' on' : i < c ? ' done' : '');
   });
   const sel = $('#groupCount');
-  if (sel.options.length !== 15) sel.innerHTML = Array.from({ length: 15 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join('');
+  if (sel.options.length !== 20) sel.innerHTML = Array.from({ length: 20 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join('');
   if (document.activeElement !== sel) sel.value = String(S.cfg.groups);
-  $('#shareLink').textContent = shareUrl;
-  const subs = groupsInPlay().filter(n => S.tables[tid(n)]?.fileName).length;
-  const b = S.busy ? 'disabled' : '';
-  const acts = [];
-  if (!S.cfgExists) acts.push(`<button class="primary" data-a="open" ${b}>Open registration</button>`);
-  else if (ph === 'collect') acts.push(`<button class="primary" data-a="voting" ${S.busy || !subs ? 'disabled' : ''}>Reveal ${subs} project${subs === 1 ? '' : 's'} and open voting</button>`);
-  else if (ph === 'voting') { acts.push(`<button class="primary" data-a="results" ${b}>Close voting and show results</button>`); acts.push(`<button data-a="collect" ${b}>Back to submissions (hides projects)</button>`); }
-  else acts.push(`<button data-a="voting" ${b}>Reopen voting</button>`);
-  if (S.cfgExists) acts.push(`<button class="danger" data-a="reset" ${b}>Start a new round</button>`);
-  $('#hostActs').innerHTML = acts.join('');
+  const tl = $('#timerLen');
+  if (!tl.options.length) tl.innerHTML = [5, 10, 12, 15, 20, 25, 30].map(m => `<option value="${m}">${m} min</option>`).join('');
+  if (document.activeElement !== tl) tl.value = String(Math.round((S.cfg.timerMs || DEFAULT_MS) / MIN));
+  $('#shareLink').textContent = shareUrl; drawQr($('#hostQr'), 110);
+  $('#hostActs').innerHTML = phaseButtons(false);
+  $('#timerActs').innerHTML = timerButtons(false);
+  tl.disabled = S.busy || timer().state !== 'idle';
   $('#confirmBox').hidden = !S.confirm;
-  const reg = groupsInPlay().filter(n => S.tables[tid(n)]).length;
+  const subs = submitted().length, reg = groupsInPlay().filter(n => S.tables[tid(n)]).length, b = S.busy ? 'disabled' : '';
   $('#subCount').textContent = `${reg} registered · ${subs} submitted`;
   $('#subRows').innerHTML = groupsInPlay().map(n => {
     const t = S.tables[tid(n)];
     return `<tr><td class="num"><strong>${p2(n)}</strong></td>
-      <td>${t ? esc(t.rep) : '<span class="muted">Not registered</span>'}</td>
-      <td class="fn" title="${esc(t?.fileName)}">${t?.fileName ? esc(t.fileName) : ''}</td>
+      <td class="clip" title="${esc(t?.title)}">${t?.fileName ? `<strong>${esc(projName(t))}</strong>` : ''}</td>
+      <td class="clip">${t ? esc(t.rep) : '<span class="muted">Not registered</span>'}</td>
       <td class="num">${t?.fileName ? time(t.submittedAt) : ''}</td>
-      <td class="row" style="gap:4px">${t?.fileName ? `<button class="ghost small" data-open="${n}">Preview</button>` : ''}${t ? `<button class="ghost small" data-release="${n}" ${b}>Release</button>` : ''}</td></tr>`;
+      <td><div class="row" style="gap:4px;justify-content:flex-end">${t?.fileName ? `<button class="ghost sm" data-open="${n}">Preview</button>` : ''}${t ? `<button class="ghost sm" data-release="${n}" ${b}>Release</button>` : ''}</div></td></tr>`;
   }).join('');
   const t = tally();
   $('#voteCount').textContent = `${t.total} vote${t.total === 1 ? '' : 's'} counted`;
   $('#hostTally').innerHTML = t.rows.length ? tallyRows(t) : '<p class="small muted">Counts appear once tables submit projects.</p>';
 }
+function phaseButtons(dock) {
+  const ph = S.cfg.phase, subs = submitted().length, b = S.busy ? 'disabled' : '', acts = [];
+  if (!S.cfgExists) acts.push(`<button class="primary" data-a="open" ${b}>Open registration</button>`);
+  else if (ph === 'collect') acts.push(`<button class="primary" data-a="showcase" ${S.busy || !subs ? 'disabled' : ''}>Close submissions &amp; start showcase (${subs})</button>`);
+  else if (ph === 'showcase') { acts.push(`<button class="primary" data-a="voting" ${b}>Open voting</button>`); if (!dock) acts.push(`<button data-a="collect" ${b}>Back to building (hides projects)</button>`); }
+  else if (ph === 'voting') { acts.push(`<button class="primary" data-a="results" ${b}>Close voting &amp; show results</button>`); acts.push(`<button data-a="showcase" ${b}>Back to showcase</button>`); }
+  else acts.push(`<button data-a="voting" ${b}>Reopen voting</button>`);
+  if (S.cfgExists && !dock) acts.push(`<button class="danger" data-a="reset" ${b}>Start a new round</button>`);
+  return acts.join('');
+}
+function timerButtons(dock) {
+  const t = timer(), b = S.busy ? 'disabled' : '', a = [];
+  if (t.state === 'idle') a.push(`<button class="accent" data-t="start" ${b}>▶ Start ${fmt(t.dur)}</button>`);
+  else if (t.state === 'running') a.push(`<button class="accent" data-t="pause" ${b}>❚❚ Pause</button>`);
+  else if (t.state === 'paused') a.push(`<button class="accent" data-t="start" ${b}>▶ Resume</button>`);
+  a.push(`<button data-t="add" data-ms="${MIN}" ${b}>+1 min</button>`);
+  if (!dock) a.push(`<button data-t="add" data-ms="${-MIN}" ${b || (t.state === 'done' ? 'disabled' : '')}>−1 min</button>`);
+  if (t.state !== 'idle') a.push(`<button ${dock ? '' : 'class="ghost"'} data-t="reset" ${b}>Reset</button>`);
+  return a.join('');
+}
 function tallyRows(t) {
   const max = Math.max(1, ...t.rows.map(r => r.c)), top = t.rows[0]?.c || 0;
-  return t.rows.map(r => `<div class="r ${r.c && r.c === top ? 'lead' : ''}"><span class="g">Table ${p2(r.n)}</span><span class="track"><i style="width:${r.c / max * 100}%"></i></span><span class="c">${r.c}</span></div>`).join('');
+  return t.rows.map(r => `<div class="r ${r.c && r.c === top ? 'lead' : ''}"><span class="g">${esc(projName(S.tables[tid(r.n)]))} <small>· T${p2(r.n)}</small></span><span class="track"><i style="width:${r.c / max * 100}%"></i></span><span class="c">${r.c}</span></div>`).join('');
 }
 
 function renderJoin() {
-  const show = S.ready && !HOST_MODE && !S.isHost && S.uid && !myTable() && S.cfgExists;
+  const show = S.ready && !HOST_MODE && !S.isHost && S.uid && !myTable() && S.cfgExists && S.cfg.phase === 'collect';
   $('#join').hidden = !show; if (!show) return;
   $('#pick').innerHTML = groupsInPlay().map(n => {
     const taken = !!S.tables[tid(n)];
@@ -366,11 +576,20 @@ function updateJoinBtn() {
 function renderMine() {
   const mt = myTable(), show = S.ready && !!mt && !S.isHost;
   $('#mine').hidden = !show; if (!show) return;
-  const ph = S.cfg.phase;
-  $('#mineTitle').textContent = `Table ${p2(mt.table)}`;
-  $('#mineStatus').textContent = `Representative: ${mt.rep}. ` + (mt.fileName ? `Submitted ${mt.fileName} at ${time(mt.submittedAt)}.` : 'Nothing submitted yet.');
-  $('#drop').hidden = ph !== 'collect';
-  $('#fileInput').disabled = S.busy;
+  const ph = S.cfg.phase, open = uploadsOpen();
+  $('#mineTitle').textContent = mt.fileName ? projName(mt) : `Table ${p2(mt.table)}`;
+  $('#mineBadge').innerHTML = mt.fileName ? '<span class="pill ok">Submitted</span>' : ph === 'collect' ? '<span class="pill">Not submitted</span>' : '';
+  $('#mineStatus').textContent = `Table ${p2(mt.table)} · Representative: ${mt.rep}. ` + (mt.fileName ? `Uploaded ${mt.fileName} at ${time(mt.submittedAt)}.` : 'Nothing uploaded yet.');
+  $('#howto').hidden = ph !== 'collect';
+  const drop = $('#drop'); drop.hidden = ph !== 'collect';
+  drop.classList.toggle('locked', !open);
+  $('#dropHead').textContent = open ? (mt.fileName ? 'Upload a newer version (optional)' : 'Upload your table\'s HTML file') : 'Time\'s up. Uploads are locked.';
+  $('#dropHint').textContent = open ? 'Up to 5 MB. Uploading again replaces the earlier file. Nobody else sees it until the showcase.' : 'If you need a moment, ask the host to add time.';
+  const ti = $('#titleInput'), pi = $('#pitchInput');
+  if (document.activeElement !== ti && !ti.dataset.dirty) ti.value = mt.title || '';
+  if (document.activeElement !== pi && !pi.dataset.dirty) pi.value = mt.pitch || '';
+  ti.disabled = pi.disabled = $('#fileInput').disabled = S.busy || !open;
+  $('#saveDetails').hidden = !mt.fileName; $('#saveDetails').disabled = S.busy || !open;
   $('#mineActs').innerHTML = (mt.fileName ? `<button data-open="${mt.table}">Preview our upload</button>` : '') + (ph !== 'collect' ? '<span class="small muted">Submissions are closed.</span>' : '');
 }
 
@@ -380,29 +599,29 @@ function renderBoard() {
   if (!S.cfgExists) { $('#boardEyebrow').textContent = 'Not open yet'; $('#boardTitle').textContent = 'Tables'; $('#boardSub').textContent = 'The host hasn\'t opened registration yet. Keep this page open; it updates by itself.'; $('#grid').innerHTML = ''; return; }
   if (ph === 'collect') {
     $('#boardEyebrow').textContent = 'Submissions sealed'; $('#boardTitle').textContent = 'Who has submitted';
-    $('#boardSub').textContent = 'Projects stay hidden until the host reveals them. You can only see which tables have turned something in.';
+    $('#boardSub').textContent = 'Projects stay hidden until the showcase. You can only see which tables have turned something in.';
     $('#grid').innerHTML = groupsInPlay().map(n => {
       const t = S.tables[tid(n)], mine = mt && mt.table === n;
-      return `<div class="tile ${mine ? 'mine' : ''} ${t?.fileName ? '' : 'empty'}">
-        <span class="tag">${mine ? '<span class="pill you">You</span>' : t?.fileName ? '<span class="pill ok">In</span>' : t ? '<span class="pill">Registered</span>' : '<span class="pill">Open</span>'}</span>
-        <span class="gnum">${p2(n)}</span><span class="meta">${t ? esc(t.rep) : 'Not registered'}${t?.fileName ? ` · in at ${time(t.submittedAt)}` : ''}</span></div>`;
+      return `<div class="tile ${mine ? 'mine' : ''} ${t ? '' : 'empty'}">
+        <span class="tag">${mine ? '<span class="pill you">You</span>' : t?.fileName ? '<span class="pill ok">In</span>' : t ? '<span class="pill">Building</span>' : '<span class="pill">Open</span>'}</span>
+        <span class="gnum">Table ${p2(n)}</span><span class="meta">${t ? esc(t.rep) : 'Not registered'}${t?.fileName ? ` · in at ${time(t.submittedAt)}` : ''}</span></div>`;
     }).join('');
     return;
   }
   const canVote = ph === 'voting' && mt;
-  $('#boardEyebrow').textContent = ph === 'voting' ? 'Voting open' : 'Voting closed';
+  $('#boardEyebrow').textContent = ph === 'showcase' ? 'Showcase' : ph === 'voting' ? 'Voting open' : 'Voting closed';
   $('#boardTitle').textContent = 'Projects';
-  $('#boardSub').textContent = ph === 'voting'
-    ? (mt ? 'Open each project, then cast your table\'s one vote for the best business solution. You can\'t vote for your own table, and you can change your vote until voting closes.' : 'Anyone can open the projects. Only registered tables can vote.')
+  $('#boardSub').textContent = ph === 'showcase' ? 'Each table is walking through its project. Open any of them to follow along. Voting opens after the last one.'
+    : ph === 'voting' ? (mt ? 'Cast your table\'s one vote for the best solution. You can\'t vote for your own table, and you can change your vote until voting closes.' : 'Anyone can open the projects. Only registered tables can vote.')
     : 'Voting has closed. Projects stay open for viewing.';
   $('#grid').innerHTML = groupsInPlay().map(n => {
     const t = S.tables[tid(n)], mine = mt && mt.table === n, voted = myVote && myVote.forTable === tid(n);
-    if (!t?.fileName) return `<div class="tile empty"><span class="tag"><span class="pill">No entry</span></span><span class="gnum">${p2(n)}</span><span class="meta">No project submitted</span></div>`;
+    if (!t?.fileName) return '';
     return `<div class="tile ${mine ? 'mine' : ''} ${voted ? 'voted' : ''}">
       <span class="tag">${voted ? '<span class="pill vote">Your vote</span>' : mine ? '<span class="pill you">You</span>' : ''}</span>
-      <span class="gnum">${p2(n)}</span><span class="meta">${esc(t.rep)} · ${esc(t.fileName)}</span>
-      <div class="acts"><button data-open="${n}">Open</button>
-      ${canVote && !mine ? `<button class="${voted ? '' : 'primary'}" data-vote="${n}" ${voted || S.busy ? 'disabled' : ''}>${voted ? 'Voted' : 'Vote'}</button>` : ''}</div></div>`;
+      <span class="gnum">Table ${p2(n)}</span><span class="ttl">${esc(projName(t))}</span><span class="meta">${t.pitch ? esc(t.pitch) + ' · ' : ''}${esc(t.rep)}</span>
+      <div class="acts"><button class="sm" data-open="${n}">Open</button>
+      ${canVote && !mine ? `<button class="sm ${voted ? '' : 'accent'}" data-vote="${n}" ${voted || S.busy ? 'disabled' : ''}>${voted ? 'Voted' : 'Vote'}</button>` : ''}</div></div>`;
   }).join('');
 }
 
@@ -411,56 +630,198 @@ function renderResults() {
   $('#results').hidden = !show; if (!show) return;
   const t = tally(), top = t.rows[0], leaders = t.rows.filter(r => top && r.c === top.c && r.c > 0);
   $('#winner').innerHTML = leaders.length
-    ? `<div class="winner"><span class="label" style="color:inherit">${leaders.length > 1 ? 'Tie for first' : 'Best business solution'}</span><span class="big">${leaders.map(r => 'Table ' + p2(r.n)).join(' & ')}</span><span class="num">${top.c} vote${top.c === 1 ? '' : 's'} of ${t.total}</span></div>`
+    ? `<div class="winner"><span class="eyebrow" style="color:inherit">${leaders.length > 1 ? 'Tie for first' : 'Winning solution'}</span><span class="big">${leaders.map(r => esc(projName(S.tables[tid(r.n)]))).join(' & ')}</span><span>${leaders.map(r => 'Table ' + p2(r.n)).join(' & ')} · ${top.c} vote${top.c === 1 ? '' : 's'} of ${t.total}</span></div>`
     : '<p class="muted">No votes were cast.</p>';
   $('#tally').innerHTML = tallyRows(t);
 }
 
-/* ---------- viewer ---------- */
+/* ---------- presenter stage ---------- */
+function renderStage() {
+  const st = $('#stage');
+  if (!S.stage || !S.isHost) { st.hidden = true; return; }
+  st.hidden = false;
+  const ph = S.cfg.phase, body = $('#sBody'), view = S.cfgExists ? ph : 'collect';
+  if (body.dataset.view !== view) { body.dataset.view = view; body.innerHTML = ''; }
+  if (view === 'collect') stageBuild(body);
+  else if (view === 'showcase') stageShow(body);
+  else if (view === 'voting') stageVote(body);
+  else stageResults(body);
+  $('#dock').innerHTML = (view === 'collect' ? timerButtons(true) + '<span class="sep"></span>' : '')
+    + phaseButtons(true) + (view === 'results' && !S.reveal ? '<button class="accent" data-s="reveal">🏆 Reveal winner</button>' : '')
+    + '<span class="sep"></span><button data-s="fs">Full screen</button><button data-s="exit">Exit</button>';
+}
+function stageBuild(body) {
+  if (!body.firstChild) body.innerHTML = `<div class="s-split">
+      <div class="s-center" style="justify-items:center">
+        <span class="s-eyebrow">Build something with AI</span>
+        <div class="s-huge" id="sBig">15:00</div>
+        <div class="s-ring"><i id="sRing"></i></div>
+        <div class="s-sub" id="sCount"></div>
+      </div>
+      <div style="display:grid;gap:24px;align-content:center">
+        <div class="s-join"><div class="qr" id="sQr"></div><span class="url">${esc(shareUrl.replace(/^https?:\/\//, ''))}</span><span class="s-sub" style="font-size:18px">Scan to register your table and upload</span></div>
+        <div class="s-tables" id="sTables"></div>
+      </div></div>`;
+  drawQr($('#sQr'), 190);
+  const subs = submitted().length, reg = groupsInPlay().filter(n => S.tables[tid(n)]).length;
+  $('#sCount').textContent = `${subs} of ${reg || S.cfg.groups} tables submitted`;
+  $('#sTables').innerHTML = groupsInPlay().filter(n => S.tables[tid(n)]).map(n => {
+    const t = S.tables[tid(n)];
+    return `<div class="s-t ${t.fileName ? 'in' : ''}"><b>Table ${p2(n)} ${t.fileName ? '✓' : ''}</b><span>${esc(t.fileName ? projName(t) : t.rep)}</span></div>`;
+  }).join('');
+}
+function stageShow(body) {
+  const list = submitted();
+  if (!list.length) { body.innerHTML = '<div class="s-center"><div class="s-sub">No projects were submitted.</div></div>'; return; }
+  S.si = Math.min(Math.max(0, S.si), list.length - 1);
+  const n = list[S.si], t = S.tables[tid(n)];
+  if (!body.firstChild) body.innerHTML = `<div class="s-show">
+      <div class="s-head"><div class="who"><span class="s-eyebrow" id="sxTable"></span><h1 id="sxTitle"></h1><span class="pitch" id="sxPitch"></span></div>
+        <div class="s-clock"><span>Walkthrough</span><b id="sxClock">0:00</b></div></div>
+      <div class="s-frame"><div class="loading" id="sxLoad">Loading project…</div>
+        <iframe id="sxFrame" title="Table project" allow="fullscreen; clipboard-write" allowfullscreen sandbox="allow-scripts allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-downloads allow-pointer-lock"></iframe>
+        <button class="s-nav l" data-s="prev" aria-label="Previous project">‹</button><button class="s-nav r" data-s="next" aria-label="Next project">›</button></div>
+      <div class="s-strip" id="sxStrip"></div></div>`;
+  $('#sxTable').textContent = `Table ${p2(n)} · ${S.si + 1} of ${list.length}`;
+  $('#sxTitle').textContent = projName(t);
+  $('#sxPitch').textContent = [t.pitch, `Presented by ${t.rep}`].filter(Boolean).join(' · ');
+  $('#sxStrip').innerHTML = list.map((x, i) => `<button data-s="go" data-i="${i}" aria-current="${i === S.si}"><span>T${p2(x)} · ${esc(projName(S.tables[tid(x)]))}</span></button>`).join('');
+  const fr = $('#sxFrame'), key = `${n}/${t.submittedAt}`;
+  if (fr.dataset.k !== key) {
+    fr.dataset.k = key; fr.srcdoc = ''; $('#sxLoad').hidden = false; $('#sxLoad').textContent = 'Loading project…'; S.showStart = Date.now();
+    loadHtml(n).then(h => { if (fr.dataset.k === key) { fr.srcdoc = h; $('#sxLoad').hidden = true; } })
+      .catch(e => { if (fr.dataset.k === key) $('#sxLoad').textContent = 'Could not load this project. ' + errText(e); });
+  }
+}
+function stageVote(body) {
+  if (!body.firstChild) body.innerHTML = `<div class="s-split">
+      <div class="s-center" style="justify-items:center">
+        <span class="s-eyebrow">Voting is open</span>
+        <div class="s-huge" style="font-size:clamp(80px,12vw,190px)">Vote!</div>
+        <div class="s-sub">One vote per table. You can't vote for yourself.</div>
+        <div class="s-sub" id="svCount" style="color:#fff;font-size:clamp(22px,2.4vw,34px)"></div>
+      </div>
+      <div style="display:grid;gap:24px;align-content:center">
+        <div class="s-join"><div class="qr" id="svQr"></div><span class="url">${esc(shareUrl.replace(/^https?:\/\//, ''))}</span></div>
+        <div class="s-tables" id="svTables"></div>
+      </div></div>`;
+  drawQr($('#svQr'), 190);
+  const voters = groupsInPlay().filter(n => S.tables[tid(n)]), did = voters.filter(n => S.votes[tid(n)]?.forTable);
+  $('#svCount').textContent = `${did.length} of ${voters.length} tables have voted`;
+  $('#svTables').innerHTML = voters.map(n => `<div class="s-t ${S.votes[tid(n)]?.forTable ? 'voted' : ''}"><b>Table ${p2(n)} ${S.votes[tid(n)]?.forTable ? '✓' : ''}</b><span>${S.votes[tid(n)]?.forTable ? 'Voted' : 'Deciding…'}</span></div>`).join('');
+}
+function stageResults(body) {
+  const t = tally(), top = t.rows[0], leaders = t.rows.filter(r => top && r.c === top.c && r.c > 0);
+  const max = Math.max(1, ...t.rows.map(r => r.c)), revealed = S.reveal;
+  const html = `<div class="s-res"><div class="inner">
+    ${revealed ? (leaders.length ? `<div class="s-win"><span class="s-eyebrow">${leaders.length > 1 ? 'It\'s a tie!' : 'And the winner is'}</span><div class="big">${leaders.map(r => esc(projName(S.tables[tid(r.n)]))).join(' & ')}</div><div class="who">${leaders.map(r => `Table ${p2(r.n)} · ${esc(S.tables[tid(r.n)].rep)}`).join(' & ')} · ${top.c} vote${top.c === 1 ? '' : 's'}</div></div>` : '<div class="s-win"><div class="big">No votes cast</div></div>')
+      : `<div class="s-win"><span class="s-eyebrow">Votes are in</span><div class="big">${t.total} vote${t.total === 1 ? '' : 's'} counted</div><div class="who">Press “Reveal winner” when you're ready.</div></div>`}
+    ${revealed ? `<div class="s-bars">${t.rows.map(r => `<div class="r ${r.c && r.c === top.c ? 'lead' : ''}"><span class="g">${esc(projName(S.tables[tid(r.n)]))} <small>· T${p2(r.n)}</small></span><span class="track"><i style="width:0" data-w="${r.c / max * 100}"></i></span><span class="c">${r.c}</span></div>`).join('')}</div>` : ''}
+  </div></div>`;
+  const sig = (revealed ? 'r' : 'h') + JSON.stringify(t);
+  if (body.dataset.sig === sig) return;
+  body.dataset.sig = sig; body.innerHTML = html;
+  if (revealed) requestAnimationFrame(() => requestAnimationFrame(() => body.querySelectorAll('.track i').forEach(i => i.style.width = i.dataset.w + '%')));
+}
+function confetti() {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const c = $('#confetti'), cols = ['#f68b1e', '#38b2e6', '#ffffff', '#7be0ad', '#ffd166'];
+  c.innerHTML = Array.from({ length: 140 }, () => `<i style="left:${Math.random() * 100}%;background:${cols[Math.floor(Math.random() * cols.length)]};animation-duration:${2.5 + Math.random() * 2.5}s;animation-delay:${Math.random() * .8}s;transform:rotate(${Math.random() * 360}deg)"></i>`).join('');
+  setTimeout(() => c.innerHTML = '', 6000);
+}
+function buzz() {
+  try {
+    const a = new (window.AudioContext || window.webkitAudioContext)(), o = a.createOscillator(), g = a.createGain();
+    o.type = 'square'; o.frequency.value = 440; o.connect(g); g.connect(a.destination);
+    g.gain.setValueAtTime(.0001, a.currentTime); g.gain.exponentialRampToValueAtTime(.25, a.currentTime + .02);
+    [0, .35, .7].forEach(d => { g.gain.setValueAtTime(.25, a.currentTime + d); g.gain.setValueAtTime(.0001, a.currentTime + d + .25); });
+    o.start(); o.stop(a.currentTime + 1);
+  } catch {}
+}
+function timesUp() {
+  if (!S.stage) return;
+  const el = document.createElement('div'); el.className = 'timesup'; el.innerHTML = '<div><b>TIME!</b><div class="s-sub" style="color:#fff">Upload your HTML now</div></div>';
+  $('#stage').appendChild(el); buzz(); setTimeout(() => el.remove(), 4000);
+}
+
+/* ---------- 4x per second: timers and clocks ---------- */
+function tick() {
+  const t = timer(), u = urgency(t), ph = S.cfg.phase, show = S.ready && S.cfgExists && ph === 'collect' && !S.isHost;
+  const bar = $('#tbar');
+  const barOn = show && (t.state !== 'idle' || !!myTable());
+  bar.hidden = !barOn;
+  if (barOn) {
+    bar.className = 'tbar ' + u;
+    $('#tbarVal').textContent = t.state === 'done' ? '0:00' : fmt(t.left);
+    $('#tbarLabel').textContent = t.state === 'idle' ? 'Timer starts when the host says go' : t.state === 'paused' ? 'Timer paused' : t.state === 'done' ? 'Time\'s up! Uploads are locked' : 'Time left to build & submit';
+    $('#tbarProg').style.width = (t.state === 'idle' ? 0 : (1 - t.left / Math.max(t.dur, t.left)) * 100) + '%';
+  }
+  if (S.isHost && !$('#host').hidden) {
+    const h = $('#hostTimer'); h.textContent = fmt(t.left); h.className = 'timerbig ' + u;
+    $('#timerState').textContent = { idle: 'Not started', running: 'Running', paused: 'Paused', done: 'Time\'s up' }[t.state];
+  }
+  if (S.stage && !$('#stage').hidden) {
+    const mini = $('#sMini');
+    mini.hidden = !(ph === 'collect' && t.state !== 'idle' && S.cfgExists) || !!$('#sBig');
+    mini.textContent = fmt(t.left); mini.className = 's-mini ' + u;
+    const big = $('#sBig');
+    if (big) {
+      big.textContent = t.state === 'done' ? '0:00' : fmt(t.left); big.className = 's-huge ' + u;
+      $('#sRing').style.width = (t.state === 'idle' ? 100 : t.left / Math.max(t.dur, t.left) * 100) + '%';
+    }
+    const ck = $('#sxClock'); if (ck) ck.textContent = fmt(Date.now() - S.showStart).replace(/^(\d+):/, '$1:');
+  }
+  const sig = t.state + '|' + ph;
+  if (S.lastTimerState && S.lastTimerState !== sig) {
+    if (t.state === 'done' && S.lastTimerState.startsWith('running') && ph === 'collect') timesUp();
+    S.lastTimerState = sig; renderMine(); if (S.isHost) { renderHost(); if (S.stage) renderStage(); }
+  }
+  S.lastTimerState = sig;
+}
+setInterval(tick, 250);
+
+/* ---------- participant viewer ---------- */
 let vOrder = [], vIndex = -1, vTable = null;
 async function openProject(n) {
   const t = S.tables[tid(n)]; if (!t?.fileName) return;
   vTable = n;
-  vOrder = S.cfg.phase === 'collect' ? [n] : groupsInPlay().filter(x => S.tables[tid(x)]?.fileName);
+  vOrder = S.cfg.phase === 'collect' ? [n] : submitted();
   vIndex = vOrder.indexOf(n);
   $('#viewer').hidden = false; document.body.style.overflow = 'hidden';
-  $('#vGroup').textContent = `Table ${p2(n)}`; $('#vFile').textContent = `${t.rep} · ${t.fileName}`;
+  $('#vGroup').textContent = `${projName(t)}`; $('#vFile').textContent = `Table ${p2(n)} · ${t.rep}${t.pitch ? ' · ' + t.pitch : ''}`;
   $('#vLoading').hidden = false; $('#vLoading').textContent = 'Loading project…';
   const fr = $('#vFrame'); fr.srcdoc = '';
   syncVote();
-  try {
-    const key = `${n}/${t.submittedAt}`;
-    if (!htmlCache.has(key)) htmlCache.set(key, prepare(await readChunks(tid(n), t.chunks)));
-    if (vTable !== n) return;
-    fr.srcdoc = htmlCache.get(key); $('#vLoading').hidden = true;
-  } catch (e) { $('#vLoading').textContent = 'Could not load this project. ' + errText(e); }
+  try { const h = await loadHtml(n); if (vTable !== n) return; fr.srcdoc = h; $('#vLoading').hidden = true; }
+  catch (e) { $('#vLoading').textContent = 'Could not load this project. ' + errText(e); }
 }
 function syncVote() {
   const mt = myTable(), btn = $('#vVote'), n = vTable;
   const can = S.cfg.phase === 'voting' && mt && n && n !== mt.table;
   btn.hidden = !can;
-  if (can) { const voted = S.votes[mt.id]?.forTable === tid(n); btn.textContent = voted ? 'Your vote' : `Vote for Table ${p2(n)}`; btn.disabled = voted || S.busy; btn.className = voted ? '' : 'primary'; }
+  if (can) { const voted = S.votes[mt.id]?.forTable === tid(n); btn.textContent = voted ? 'Your vote ✓' : `Vote for Table ${p2(n)}`; btn.disabled = voted || S.busy; btn.className = voted ? '' : 'primary'; }
   $('#vPrev').hidden = $('#vNext').hidden = vOrder.length < 2;
 }
-function closeViewer() { $('#viewer').hidden = true; $('#vFrame').srcdoc = ''; document.body.style.overflow = ''; vTable = null; }
+function closeViewer() { $('#viewer').hidden = true; $('#vFrame').srcdoc = ''; document.body.style.overflow = S.stage ? 'hidden' : ''; vTable = null; }
 function step(d) { if (vOrder.length < 2) return; vIndex = (vIndex + d + vOrder.length) % vOrder.length; openProject(vOrder[vIndex]); }
 
 /* ---------- actions ---------- */
 async function register() {
   const rep = $('#nameInput').value.trim(), n = S.pick; if (!rep || !n) return;
   S.busy = true; updateJoinBtn(); $('#joinErr').textContent = '';
-  try {
-    await setDoc(doc(db, 'tables', tid(n)), { table: n, rep, uid: S.uid, at: Date.now() });
-    toast(`Table ${p2(n)} registered`); S.pick = null;
-  } catch (e) {
-    $('#joinErr').textContent = (e.code || '').includes('permission') ? `Table ${p2(n)} was just taken. If that's your table, ask the host to release it.` : errText(e);
-  }
+  try { await setDoc(doc(db, 'tables', tid(n)), { table: n, rep, uid: S.uid, at: Date.now() }); toast(`Table ${p2(n)} registered`); S.pick = null; }
+  catch (e) { $('#joinErr').textContent = (e.code || '').includes('permission') ? `Table ${p2(n)} was just taken. If that's your table, ask the host to release it.` : errText(e); }
   S.busy = false; render();
 }
-
+function details() {
+  return { title: $('#titleInput').value.trim().slice(0, 80), pitch: $('#pitchInput').value.trim().slice(0, 160) };
+}
 async function upload(file) {
   const msg = $('#upMsg'), bar = $('#upBar'), mt = myTable(); msg.style.color = '';
   if (!file || !mt) return;
+  if (!uploadsOpen()) { msg.style.color = 'var(--bad)'; msg.textContent = 'Time\'s up. Uploads are locked.'; return; }
+  const d = details();
+  if (!d.title) { msg.style.color = 'var(--bad)'; msg.textContent = 'Give your project a name first, then choose the file again.'; $('#fileInput').value = ''; $('#titleInput').focus(); return; }
   if (!/\.html?$/i.test(file.name)) { msg.style.color = 'var(--bad)'; msg.textContent = 'That isn\'t an HTML file. Save your project as a file ending in .html and try again.'; return; }
   if (file.size > MAXBYTES) { msg.style.color = 'var(--bad)'; msg.textContent = `That file is ${(file.size / 1048576).toFixed(1)} MB. The limit is 5 MB.`; return; }
   S.busy = true; render(); bar.hidden = false;
@@ -472,12 +833,20 @@ async function upload(file) {
     }
     const at = Date.now();
     await setDoc(doc(db, 'subs', mt.id), { table: mt.table, fileName: file.name, size: file.size, chunks: n, at });
-    await updateDoc(doc(db, 'tables', mt.id), { fileName: file.name, chunks: n, submittedAt: at });
-    msg.textContent = `Submitted ${file.name}. It stays hidden until the host reveals all projects.`;
+    await updateDoc(doc(db, 'tables', mt.id), { fileName: file.name, chunks: n, submittedAt: at, title: d.title, pitch: d.pitch });
+    $('#titleInput').dataset.dirty = $('#pitchInput').dataset.dirty = '';
+    msg.textContent = `Submitted “${d.title}”. It stays hidden until the showcase.`;
   } catch (e) { msg.style.color = 'var(--bad)'; msg.textContent = errText(e); }
   bar.hidden = true; $('#fileInput').value = ''; S.busy = false; render();
 }
-
+async function saveDetails() {
+  const mt = myTable(), d = details(), msg = $('#upMsg'); msg.style.color = '';
+  if (!mt || !d.title) { msg.style.color = 'var(--bad)'; msg.textContent = 'Project name can\'t be empty.'; return; }
+  S.busy = true; render();
+  try { await updateDoc(doc(db, 'tables', mt.id), d); $('#titleInput').dataset.dirty = $('#pitchInput').dataset.dirty = ''; toast('Saved'); }
+  catch (e) { msg.style.color = 'var(--bad)'; msg.textContent = errText(e); }
+  S.busy = false; render();
+}
 async function vote(n) {
   const mt = myTable(); if (!mt || n === mt.table) return;
   S.busy = true; render(); syncVote();
@@ -488,7 +857,6 @@ async function vote(n) {
 
 const setCfg = patch => setDoc(doc(db, 'config', 'state'), { ...S.cfg, ...patch });
 function progress(t) { const el = $('#hostProgress'); el.hidden = !t; el.textContent = t || ''; }
-
 async function clearTable(id, alsoRegistration) {
   const t = S.tables[id];
   const chunks = await getDocs(collection(db, 'subs', id, 'chunks'));
@@ -503,8 +871,8 @@ async function newRound() {
   try {
     for (const id of Object.keys(S.tables)) { progress(`Clearing table ${id.slice(1)}…`); await clearTable(id, all); }
     for (const id of Object.keys(S.votes)) await deleteDoc(doc(db, 'votes', id));
-    await setCfg({ phase: 'collect', round: (S.cfg.round || 1) + 1 });
-    htmlCache.clear(); toast('New round started.');
+    await setCfg({ phase: 'collect', round: (S.cfg.round || 1) + 1, timerEnd: 0, timerLeft: null });
+    htmlCache.clear(); S.reveal = false; S.si = 0; toast('New round started.');
   } catch (e) { toast(errText(e)); }
   progress(''); $('#clearTables').checked = false; S.busy = false; render();
 }
@@ -516,9 +884,38 @@ async function release(n) {
 async function hostAction(a) {
   if (a === 'reset') { S.confirm = true; return render(); }
   S.busy = true; render();
-  try { await setCfg(a === 'open' ? { phase: 'collect' } : { phase: a }); } catch (e) { toast(errText(e)); }
+  const patch = a === 'open' ? { phase: 'collect' } : { phase: a };
+  if (a === 'showcase' && S.cfg.phase === 'collect') { const t = timer(); if (t.state === 'running') Object.assign(patch, { timerEnd: 0, timerLeft: 0 }); S.si = 0; }
+  if (a === 'results') S.reveal = false;
+  try { await setCfg(patch); } catch (e) { toast(errText(e)); }
   S.busy = false; render();
 }
+async function timerAction(a, ms) {
+  const t = timer(), now = Date.now(); let patch;
+  if (a === 'start') patch = { timerEnd: now + t.left, timerLeft: null, timerMs: S.cfg.timerMs || DEFAULT_MS };
+  else if (a === 'pause') patch = { timerEnd: 0, timerLeft: t.left };
+  else if (a === 'reset') patch = { timerEnd: 0, timerLeft: null };
+  else if (a === 'add') {
+    if (t.state === 'running') patch = { timerEnd: Math.max(now + 1000, S.cfg.timerEnd + ms) };
+    else if (t.state === 'done') patch = ms > 0 ? { timerEnd: now + ms, timerLeft: null } : null;
+    else if (t.state === 'paused') patch = { timerLeft: Math.max(1000, t.left + ms) };
+    else patch = { timerMs: Math.max(MIN, (S.cfg.timerMs || DEFAULT_MS) + ms) };
+  }
+  if (!patch) return;
+  S.busy = true; render();
+  try { await setCfg(patch); }
+  catch (e) { toast((e.code || '').includes('permission') ? 'The timer couldn\'t be saved. Publish the new firestore.rules in the Firebase console.' : errText(e)); }
+  S.busy = false; render();
+}
+function openStage() {
+  S.stage = true; document.body.style.overflow = 'hidden'; $('#sBody').dataset.view = ''; render();
+  const el = document.documentElement; if (el.requestFullscreen && !document.fullscreenElement) el.requestFullscreen().catch(() => {});
+  pokeDock();
+}
+function closeStage() { S.stage = false; document.body.style.overflow = ''; if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); render(); }
+function stageGo(i) { const n = submitted().length; if (!n) return; S.si = (i + n) % n; renderStage(); }
+let dockT;
+function pokeDock() { const d = $('#dock'); d.classList.remove('hide'); clearTimeout(dockT); dockT = setTimeout(() => { if (!d.matches(':hover')) d.classList.add('hide'); }, 3000); }
 
 /* ---------- events ---------- */
 document.addEventListener('click', e => {
@@ -527,17 +924,31 @@ document.addEventListener('click', e => {
   if (t.dataset.open) return openProject(Number(t.dataset.open));
   if (t.dataset.vote) return vote(Number(t.dataset.vote));
   if (t.dataset.a) return hostAction(t.dataset.a);
+  if (t.dataset.t) return timerAction(t.dataset.t, Number(t.dataset.ms || 0));
   if (t.dataset.release) return release(Number(t.dataset.release));
+  if (t.dataset.s) {
+    const s = t.dataset.s;
+    if (s === 'exit') return closeStage();
+    if (s === 'fs') { const el = document.documentElement; return document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen?.().catch(() => toast('Full screen isn\'t available here.')); }
+    if (s === 'prev') return stageGo(S.si - 1);
+    if (s === 'next') return stageGo(S.si + 1);
+    if (s === 'go') return stageGo(Number(t.dataset.i));
+    if (s === 'reveal') { S.reveal = true; renderStage(); confetti(); return; }
+  }
 });
+$('#openStage').addEventListener('click', openStage);
 $('#joinBtn').addEventListener('click', register);
 $('#nameInput').addEventListener('input', updateJoinBtn);
 $('#nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') register(); });
+['#titleInput', '#pitchInput'].forEach(s => $(s).addEventListener('input', e => e.target.dataset.dirty = '1'));
+$('#saveDetails').addEventListener('click', saveDetails);
 $('#fileInput').addEventListener('change', e => upload(e.target.files[0]));
 const drop = $('#drop');
-['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); if (uploadsOpen()) drop.classList.add('over'); }));
 ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
 drop.addEventListener('drop', e => { if (!S.busy) upload(e.dataTransfer.files[0]); });
 $('#groupCount').addEventListener('change', async e => { try { await setCfg({ groups: Number(e.target.value) }); } catch (err) { toast(errText(err)); } });
+$('#timerLen').addEventListener('change', async e => { try { await setCfg({ timerMs: Number(e.target.value) * MIN }); } catch (err) { toast(errText(err)); } });
 $('#confirmReset').addEventListener('click', newRound);
 $('#cancelReset').addEventListener('click', () => { S.confirm = false; render(); });
 $('#copyLink').addEventListener('click', async () => {
@@ -548,10 +959,21 @@ $('#vClose').addEventListener('click', closeViewer);
 $('#vPrev').addEventListener('click', () => step(-1));
 $('#vNext').addEventListener('click', () => step(1));
 $('#vVote').addEventListener('click', () => vTable && vote(vTable));
-$('#vFull').addEventListener('click', () => { const f = $('#vFrame'); (f.requestFullscreen ? f.requestFullscreen() : Promise.reject()).catch(() => toast('Full screen isn\'t available on this device.')); });
+$('#stage').addEventListener('mousemove', pokeDock);
 document.addEventListener('keydown', e => {
+  if (e.target.matches('input,select,textarea')) return;
+  if (S.stage) {
+    pokeDock();
+    const ph = S.cfg.phase;
+    if (e.key === 'Escape' && !document.fullscreenElement) closeStage();
+    if (ph === 'showcase' && (e.key === 'ArrowRight' || e.key === 'PageDown')) { e.preventDefault(); stageGo(S.si + 1); }
+    if (ph === 'showcase' && (e.key === 'ArrowLeft' || e.key === 'PageUp')) { e.preventDefault(); stageGo(S.si - 1); }
+    if (ph === 'collect' && e.key === ' ') { e.preventDefault(); const t = timer(); if (t.state === 'running') timerAction('pause'); else if (t.state !== 'done') timerAction('start'); }
+    if (e.key === 'f' || e.key === 'F') { const el = document.documentElement; document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen?.().catch(() => {}); }
+    return;
+  }
   if ($('#viewer').hidden) return;
-  if (e.key === 'Escape' && !document.fullscreenElement) closeViewer();
+  if (e.key === 'Escape') closeViewer();
   if (e.key === 'ArrowLeft') step(-1);
   if (e.key === 'ArrowRight') step(1);
 });
@@ -566,7 +988,7 @@ window.addEventListener('hashchange', () => location.reload());
 /* ---------- boot ---------- */
 function subscribe() {
   unsubs.forEach(u => u()); unsubs = [];
-  const fail = e => { S.fatal = 'Lost connection to the board. Refresh the page.'; render(); };
+  const fail = () => { S.fatal = 'Lost connection to the board. Refresh the page.'; render(); };
   unsubs.push(onSnapshot(doc(db, 'config', 'state'), s => {
     S.cfgExists = s.exists(); S.cfg = { groups: 15, phase: 'collect', round: 1, ...(s.exists() ? s.data() : {}) };
     S.ready = true; render(); if (!$('#viewer').hidden) syncVote();
