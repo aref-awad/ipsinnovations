@@ -331,6 +331,16 @@ td.clip{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowra
 .s-built{justify-self:start;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;padding:12px 18px;border-radius:14px;background:rgba(0,142,197,.14);border:1px solid rgba(56,178,230,.4);font-size:clamp(14px,1.2vw,19px);color:#d6ecf7}
 .s-built b{font-size:clamp(20px,1.8vw,28px);color:#fff;font-variant-numeric:tabular-nums}
 @media (max-width:900px){.s-demo{grid-template-columns:1fr}}
+.bust{position:absolute;inset:0;z-index:30;display:grid;place-items:center;background:rgba(4,12,20,.82);backdrop-filter:blur(6px);animation:fadeIn .25s ease}
+.bust .bcard{width:min(1100px,92vw);display:grid;gap:clamp(12px,2vh,22px);justify-items:center;text-align:center;animation:bustIn .55s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes bustIn{from{transform:scale(.7);opacity:0}}
+.bust .siren{font-size:clamp(14px,1.3vw,20px);font-weight:800;letter-spacing:.24em;text-transform:uppercase;color:#ff6b5e;animation:siren .5s steps(1) infinite}
+@keyframes siren{50%{color:#38b2e6}}
+.bust h2{font-size:clamp(34px,4.2vw,72px);line-height:1.05;letter-spacing:-.03em}
+.bust h2 em{font-style:normal;color:#f68b1e}
+.bust .vid{width:min(860px,72vw,calc(58vh * 16 / 9));aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:#000;box-shadow:0 0 0 4px rgba(255,107,94,.6),0 30px 80px rgba(0,0,0,.6)}
+.bust video{width:100%;height:100%;display:block}
+.bust .sub{font-size:clamp(16px,1.6vw,24px);color:#bfe3f1;font-weight:600}
 .notes-drawer{position:absolute;right:16px;top:70px;bottom:90px;width:min(460px,40vw);z-index:20;overflow:auto;padding:20px 22px;border-radius:16px;background:#04121c;isolation:isolate;border:1px solid rgba(255,255,255,.18);box-shadow:0 20px 60px rgba(0,0,0,.6);font-size:16px;line-height:1.55}
 @media (max-width:900px){.s-cards,.s-uses{grid-template-columns:repeat(2,minmax(0,1fr))}.s-compare{grid-template-columns:1fr}.s-compare .arrow{transform:rotate(90deg)}}
 @media (prefers-reduced-motion: reduce){.net{display:none}.caret,.dots i{animation:none}.s-huge.crit,.timesup{animation:none}.s-bars .track i{transition:none}.confetti{display:none}.rise,.s-body.enter > *{animation:none}.orb{transition:none}}
@@ -495,7 +505,7 @@ td.clip{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowra
   <div class="vidbox">
     <div class="row"><b id="vidTitle">Host preview</b><button class="sm" id="vidClose">Close</button></div>
     <div class="vidframe" id="vidFrame"></div>
-    <div class="caught" id="vidCaught" hidden>Caught you 👀 Nice try. Back to building!</div>
+    <div class="caught" id="vidCaught" hidden>Caught you 👀 Look up at the big screen…</div>
   </div>
 </div>
 <div id="toast" class="toast" hidden></div>
@@ -1326,11 +1336,11 @@ function openVideo() {
   box.innerHTML = `<div class="vidload"><span>Loading every table's project…</span><div class="pbar"><i></i></div></div>`;
   // create and "unlock" the video inside the tap itself so phones allow sound when it plays a moment later
   const v = document.createElement('video');
-  v.src = 'cheating.mp4'; v.playsInline = true; v.preload = 'auto'; v.controls = true; v.style.visibility = 'hidden';
+  v.src = 'cheating.mp4'; v.playsInline = true; v.preload = 'auto'; v.controls = true; v.muted = true; v.style.visibility = 'hidden';
+  reportBust();
   box.appendChild(v);
   v.play().then(() => { v.pause(); v.currentTime = 0; }).catch(() => {});
-  v.addEventListener('playing', () => { $('#vidTitle').textContent = '🚨 Busted'; });
-  v.addEventListener('ended', () => { $('#vidCaught').hidden = false; });
+  v.addEventListener('playing', () => { $('#vidTitle').textContent = '🚨 Busted! You\'re on the big screen'; $('#vidCaught').hidden = false; });
   $('#vidModal').hidden = false;
   clearTimeout(vidT);
   vidT = setTimeout(() => {
@@ -1339,6 +1349,41 @@ function openVideo() {
     v.play().catch(() => { $('#vidTitle').textContent = '🚨 Busted (tap play)'; });
   }, 1400);
 }
+async function reportBust() {
+  const mt = myTable(); if (!mt) return;
+  try { await setDoc(doc(db, 'busted', mt.id), { table: mt.table, at: Date.now() }); } catch (e) { /* rules not published yet: phone still shows the clip */ }
+}
+
+/* ---------- projector: someone clicked the "host preview" link ---------- */
+const bustSeen = {}; let bustQueue = [], bustOn = false, bustReady = false;
+function onBusted(q) {
+  q.forEach(d => {
+    const v = d.data(), prev = bustSeen[d.id];
+    bustSeen[d.id] = v.at;
+    if (bustReady && v.at !== prev && !bustQueue.includes(d.id)) bustQueue.push(d.id);
+  });
+  bustReady = true;
+  nextBust();
+}
+function nextBust() {
+  if (bustOn || !bustQueue.length) return;
+  const id = bustQueue.shift(), t = S.tables[id], n = Number(id.slice(1));
+  const team = t ? (t.title || `${t.rep}'s team`) : '';
+  if (!S.stage) { toast(`🚨 Table ${p2(n)}${team ? ' · ' + team : ''} clicked the "host preview" link`); return nextBust(); }
+  bustOn = true;
+  const el = document.createElement('div'); el.className = 'bust';
+  el.innerHTML = `<div class="bcard"><span class="siren">🚨 Cheating detected 🚨</span>
+    <h2>Table ${p2(n)}${team ? ` · <em>${esc(team)}</em>` : ''}</h2>
+    <div class="vid"><video src="cheating.mp4" playsinline autoplay preload="auto"></video></div>
+    <span class="sub">tried to peek at everyone else's projects 👀</span></div>`;
+  $('#stage').appendChild(el);
+  const v = el.querySelector('video'), done = () => { if (!el.isConnected) return; el.remove(); bustOn = false; setTimeout(nextBust, 400); };
+  v.play().catch(() => { v.muted = true; v.play().catch(() => {}); });
+  v.addEventListener('ended', () => setTimeout(done, 2500));
+  el.addEventListener('click', done);
+  setTimeout(done, 15000);
+}
+
 function closeVideo() { clearTimeout(vidT); $('#vidModal').hidden = true; $('#vidFrame').innerHTML = ''; }
 
 /* ---------- events ---------- */
@@ -1432,6 +1477,7 @@ function subscribe() {
   }, fail));
   unsubs.push(onSnapshot(collection(db, 'tables'), q => { S.tables = {}; q.forEach(d => S.tables[d.id] = d.data()); render(); }, fail));
   unsubs.push(onSnapshot(collection(db, 'votes'), q => { S.votes = {}; q.forEach(d => S.votes[d.id] = d.data()); render(); }, fail));
+  if (S.isHost) unsubs.push(onSnapshot(collection(db, 'busted'), onBusted, () => {}));
 }
 
 if (firebaseConfig.apiKey.startsWith('PASTE')) {
