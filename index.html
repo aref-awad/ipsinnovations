@@ -158,7 +158,7 @@ td.clip{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowra
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--navy);color:#fff;padding:11px 18px;border-radius:12px;font-size:14px;font-weight:600;z-index:200;max-width:calc(100% - 32px);box-shadow:0 8px 24px rgba(0,0,0,.25)}
 
 /* ===== presenter stage (always dark, built for a projector) ===== */
-.stage{position:fixed;inset:0;z-index:100;background:#071d30;color:#fff;display:flex;flex-direction:column;overflow:hidden}
+.stage{position:fixed;inset:0;z-index:100;background:#071d30;color:#fff;display:flex;flex-direction:column;overflow:hidden;overflow:clip}
 .stage::before{content:"";position:absolute;inset:0;background:radial-gradient(1200px 600px at 85% -10%,rgba(0,142,197,.28),transparent 60%),radial-gradient(900px 500px at -10% 110%,rgba(246,139,30,.16),transparent 60%);pointer-events:none}
 .stage > *{position:relative}
 .s-top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 28px}
@@ -230,7 +230,64 @@ td.clip{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowra
 .timesup{position:absolute;inset:0;display:grid;place-items:center;background:rgba(142,31,23,.92);z-index:6;text-align:center;animation:flash .6s ease-in-out 3}
 .timesup b{font-size:clamp(80px,14vw,220px);font-weight:800;letter-spacing:-.03em;line-height:.95}
 @keyframes flash{50%{background:rgba(246,139,30,.95)}}
-@media (prefers-reduced-motion: reduce){.s-huge.crit,.timesup{animation:none}.s-bars .track i{transition:none}.confetti{display:none}}
+/* drifting glows: move to a new spot on every screen (Morph-style) */
+.orb{position:absolute;border-radius:50%;pointer-events:none;filter:blur(10px);transition:left 1.6s cubic-bezier(.65,0,.35,1),top 1.6s cubic-bezier(.65,0,.35,1),width 1.6s cubic-bezier(.65,0,.35,1),height 1.6s cubic-bezier(.65,0,.35,1);z-index:0}
+.orb.b{background:radial-gradient(circle,rgba(0,142,197,.55) 0%,rgba(0,142,197,.18) 45%,transparent 70%)}
+.orb.o{background:radial-gradient(circle,rgba(246,139,30,.42) 0%,rgba(246,139,30,.12) 45%,transparent 70%)}
+.stage[data-view="welcome"] .orb.b{left:55%;top:-40%;width:62vw;height:62vw}
+.stage[data-view="welcome"] .orb.o{left:-22%;top:45%;width:50vw;height:50vw}
+.stage[data-view="collect"] .orb.b{left:-20%;top:-45%;width:55vw;height:55vw}
+.stage[data-view="collect"] .orb.o{left:62%;top:55%;width:45vw;height:45vw}
+.stage[data-view="showcase"] .orb.b{left:70%;top:-50%;width:45vw;height:45vw}
+.stage[data-view="showcase"] .orb.o{left:-25%;top:70%;width:40vw;height:40vw}
+.stage[data-view="voting"] .orb.b{left:40%;top:50%;width:60vw;height:60vw}
+.stage[data-view="voting"] .orb.o{left:-15%;top:-40%;width:45vw;height:45vw}
+.stage[data-view="results"] .orb.b{left:-25%;top:30%;width:55vw;height:55vw}
+.stage[data-view="results"] .orb.o{left:55%;top:-45%;width:60vw;height:60vw}
+.stage[data-view="closing"] .orb.b{left:-28%;top:-48%;width:58vw;height:58vw}
+.stage[data-view="closing"] .orb.o{left:66%;top:-35%;width:42vw;height:42vw}
+.s-top,.s-body{z-index:1}
+.s-body.enter > *{animation:viewIn .7s cubic-bezier(.2,.8,.2,1) both}
+@keyframes viewIn{from{opacity:0}}
+.rise{animation:rise .75s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--d,0) * 140ms + 250ms)}
+@keyframes rise{from{opacity:0;transform:translateY(22px)}}
+.glass{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);border-radius:18px;box-shadow:0 18px 50px rgba(0,0,0,.35);backdrop-filter:blur(6px)}
+.s-slide{flex:1;display:grid;align-content:center;gap:clamp(14px,2.2vh,28px);width:min(1400px,100%);margin:0 auto;padding-bottom:70px}
+.s-kick{font-size:clamp(13px,1.2vw,18px);font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#f68b1e}
+.s-title{font-size:clamp(48px,6.4vw,104px);font-weight:800;line-height:1;letter-spacing:-.035em}
+.s-title em{font-style:normal;color:#f68b1e}
+.s-lede{font-size:clamp(18px,2vw,30px);color:#bfe3f1;font-weight:500}
+.s-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(12px,1.4vw,22px);margin-top:clamp(6px,1.5vh,20px)}
+.s-card{padding:clamp(16px,1.8vw,28px);display:grid;gap:10px;align-content:start;position:relative}
+.s-card .ic{width:clamp(44px,3.6vw,60px);height:clamp(44px,3.6vw,60px);border-radius:50%;display:grid;place-items:center;background:#f68b1e;color:#fff}
+.s-card .ic svg{width:52%;height:52%}
+.s-card .n{position:absolute;top:clamp(16px,1.8vw,28px);right:clamp(16px,1.8vw,28px);font-weight:800;color:#7fa3c2;letter-spacing:.06em}
+.s-card h3{font-size:clamp(18px,1.7vw,26px);margin-top:6px}
+.s-card p{font-size:clamp(14px,1.15vw,18px);color:#bfe3f1;line-height:1.4}
+.s-go{justify-self:start;font-size:clamp(16px,1.3vw,20px);padding:14px 26px;border-radius:999px;background:#f68b1e;border-color:#f68b1e;color:#2b1500;box-shadow:0 0 30px rgba(246,139,30,.45)}
+.s-go:hover:not(:disabled){border-color:#f68b1e;filter:brightness(1.08)}
+.s-compare{display:grid;grid-template-columns:minmax(0,.85fr) auto minmax(0,1.15fr);gap:clamp(14px,1.6vw,26px);align-items:stretch}
+.s-compare .arrow{display:grid;place-items:center;color:#f68b1e}
+.s-compare .arrow svg{width:clamp(32px,2.6vw,44px);height:auto}
+.s-box{padding:clamp(18px,2vw,32px);display:grid;gap:14px;align-content:start}
+.s-box .hd{display:flex;align-items:center;gap:14px;font-size:clamp(17px,1.5vw,24px);font-weight:800}
+.s-box .ic{width:clamp(42px,3.2vw,54px);height:clamp(42px,3.2vw,54px);border-radius:50%;display:grid;place-items:center;flex:none}
+.s-box .ic svg{width:52%;height:52%}
+.s-box ul{margin:0;padding-left:1.1em;display:grid;gap:8px;font-size:clamp(16px,1.45vw,23px)}
+.s-box.muted{color:#b9c7d3}
+.s-box.muted .ic{background:#3a5873;color:#b9c7d3}
+.s-box.hero{background:#fff;color:#0b2b45;border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+.s-box.hero .ic{background:#f68b1e;color:#fff}
+.s-uses{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(12px,1.4vw,22px)}
+.s-use{display:flex;gap:14px;align-items:center;padding:clamp(12px,1.2vw,18px)}
+.s-use .ic{width:clamp(40px,3vw,50px);height:clamp(40px,3vw,50px);border-radius:50%;background:#008ec5;display:grid;place-items:center;flex:none;color:#fff}
+.s-use .ic svg{width:52%;height:52%}
+.s-use b{display:block;font-size:clamp(16px,1.35vw,21px)}
+.s-use span{font-size:clamp(13px,1.05vw,16px);color:#bfe3f1}
+.s-winner{justify-self:start;display:inline-flex;gap:10px;align-items:center;padding:10px 18px;border-radius:999px;background:rgba(246,139,30,.16);border:1px solid rgba(246,139,30,.55);color:#ffcf9c;font-weight:700;font-size:clamp(14px,1.2vw,18px)}
+.stage > .notes-drawer{position:absolute;right:16px;top:70px;bottom:90px;width:min(460px,40vw);z-index:20;overflow:auto;padding:20px 22px;border-radius:16px;background:#04121c;isolation:isolate;border:1px solid rgba(255,255,255,.18);box-shadow:0 20px 60px rgba(0,0,0,.6);font-size:16px;line-height:1.55}
+@media (max-width:900px){.s-cards,.s-uses{grid-template-columns:repeat(2,minmax(0,1fr))}.s-compare{grid-template-columns:1fr}.s-compare .arrow{transform:rotate(90deg)}}
+@media (prefers-reduced-motion: reduce){.s-huge.crit,.timesup{animation:none}.s-bars .track i{transition:none}.confetti{display:none}.rise,.s-body.enter > *{animation:none}.orb{transition:none}}
 </style>
 </head>
 <body>
@@ -267,6 +324,7 @@ td.clip{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowra
       <div><span class="eyebrow">Host console</span><h2>Run the challenge</h2></div>
       <div class="row">
         <button class="accent" id="openStage">▶ Presenter view</button>
+        <button id="openNotes">Speaker notes</button>
         <label for="groupCount" class="small muted">Tables</label><select id="groupCount"></select>
         <button class="ghost sm" id="signOut">Sign out</button>
       </div>
@@ -299,7 +357,7 @@ td.clip{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowra
     </div>
     <div>
       <div class="row spread" style="margin-bottom:8px"><h3>Tables</h3><span class="small muted" id="subCount"></span></div>
-      <div class="tablewrap"><table><thead><tr><th>Table</th><th>Project</th><th>Team</th><th>Submitted</th><th></th></tr></thead><tbody id="subRows"></tbody></table></div>
+      <div class="tablewrap"><table><thead><tr><th>Table</th><th>Project</th><th>Representative</th><th>Submitted</th><th></th></tr></thead><tbody id="subRows"></tbody></table></div>
     </div>
     <div>
       <div class="row spread" style="margin-bottom:8px"><h3>Live vote count (host only)</h3><span class="small muted" id="voteCount"></span></div>
@@ -310,8 +368,8 @@ td.clip{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowra
   <!-- REGISTER -->
   <section id="join" class="panel" hidden>
     <div><span class="eyebrow">Step 1</span><h2>Register your table</h2></div>
-    <p class="small muted">Pick your table number and enter your tables team name. Use this same device to upload and vote as a team!.</p>
-    <div class="field" style="max-width:360px"><label for="nameInput">Team Name</label><input type="text" id="nameInput" placeholder="Full name" maxlength="60" autocomplete="name"></div>
+    <p class="small muted">Pick your table number and enter the name of the one person representing your table. Use this same device to upload and vote.</p>
+    <div class="field" style="max-width:360px"><label for="nameInput">Representative's name</label><input type="text" id="nameInput" placeholder="Full name" maxlength="60" autocomplete="name"></div>
     <div class="pick" id="pick"></div>
     <div class="row"><button class="primary" id="joinBtn" disabled>Register table</button><span id="joinErr" class="small" style="color:var(--bad)"></span></div>
   </section>
@@ -323,8 +381,8 @@ td.clip{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowra
     <div id="howto" class="card">
       <h3>The challenge</h3>
       <ol class="small" style="margin:0;padding-left:18px;display:grid;gap:4px">
-        <li>Pick a real problem your team runs into at work. Anything goes.</li>
-        <li>Ask any AI tool (Claude, ChatGPT, Gemini, Copilot…) to build a <strong>single HTML file</strong> that solves it. Try: <em>"Build me a one-page HTML app that…"</em></li>
+        <li>Pick an idea: a problem to fix, a report to automate, a scorecard to generate. Anything your team does over and over.</li>
+        <li>Ask any AI tool (Claude, ChatGPT, Gemini, Copilot…) to build a <strong>single HTML file</strong>. Try: <em>"Build me a single HTML file that…"</em> Use made-up data only: no patient or confidential information.</li>
         <li>Save it as a <strong>.html</strong> file, then upload it below before the timer runs out.</li>
       </ol>
     </div>
@@ -375,13 +433,15 @@ td.clip{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowra
 </div>
 
 <!-- PRESENTER STAGE -->
-<div id="stage" class="stage" hidden role="dialog" aria-modal="true" aria-label="Presenter view">
+<div id="stage" class="stage" hidden role="dialog" aria-modal="true" aria-label="Presenter view" data-view="">
+  <div class="orb b" aria-hidden="true"></div><div class="orb o" aria-hidden="true"></div>
   <div class="s-top">
     <div class="brand"><div class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#f68b1e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 6.1L20.5 10l-6.1 2.4L12 18.5l-2.4-6.1L3.5 10l6.1-1.9z"/></svg></div><h2>AI Build Challenge</h2></div>
     <div class="row"><span class="s-mini" id="sMini" hidden></span></div>
   </div>
   <div class="s-body" id="sBody"></div>
   <div class="dock" id="dock"></div>
+  <div class="notes-drawer" id="notesDrawer" hidden></div>
   <div class="confetti" id="confetti"></div>
 </div>
 <div id="toast" class="toast" hidden></div>
@@ -420,7 +480,7 @@ const shareUrl = location.origin + location.pathname;
 
 const S = { cfg: { groups: 15, phase: 'collect', round: 1 }, cfgExists: false, tables: {}, votes: {}, uid: null, isHost: false,
   ready: false, busy: false, confirm: false, pick: null, fatal: '',
-  stage: false, si: 0, reveal: false, showStart: 0, lastTimerState: '' };
+  stage: false, slide: null, si: 0, reveal: false, showStart: 0, lastTimerState: '', drawer: false };
 const htmlCache = new Map();
 let db, auth, unsubs = [];
 
@@ -636,19 +696,79 @@ function renderResults() {
 }
 
 /* ---------- presenter stage ---------- */
+function stageView() { return S.slide || (S.cfgExists ? S.cfg.phase : 'collect'); }
 function renderStage() {
   const st = $('#stage');
-  if (!S.stage || !S.isHost) { st.hidden = true; return; }
+  if (!S.stage || !S.isHost) { st.hidden = true; syncNotes(); return; }
   st.hidden = false;
-  const ph = S.cfg.phase, body = $('#sBody'), view = S.cfgExists ? ph : 'collect';
-  if (body.dataset.view !== view) { body.dataset.view = view; body.innerHTML = ''; }
-  if (view === 'collect') stageBuild(body);
+  const body = $('#sBody'), view = stageView();
+  st.dataset.view = view;
+  st.scrollLeft = 0; st.scrollTop = 0;
+  if (body.dataset.view !== view) {
+    body.dataset.view = view; body.dataset.sig = ''; body.innerHTML = '';
+    body.classList.remove('enter'); void body.offsetWidth; body.classList.add('enter');
+  }
+  if (view === 'welcome') stageWelcome(body);
+  else if (view === 'closing') stageClosing(body);
+  else if (view === 'collect') stageBuild(body);
   else if (view === 'showcase') stageShow(body);
   else if (view === 'voting') stageVote(body);
   else stageResults(body);
-  $('#dock').innerHTML = (view === 'collect' ? timerButtons(true) + '<span class="sep"></span>' : '')
+  const b = S.busy ? 'disabled' : '';
+  let dock;
+  if (view === 'welcome') dock = `<button class="accent" data-s="start" ${b}>Start: show the QR code →</button>`;
+  else if (view === 'closing') dock = '<button data-s="back">← Back to results</button>';
+  else dock = (view === 'collect' ? timerButtons(true) + '<span class="sep"></span>' : '')
     + phaseButtons(true) + (view === 'results' && !S.reveal ? '<button class="accent" data-s="reveal">🏆 Reveal winner</button>' : '')
-    + '<span class="sep"></span><button data-s="fs">Full screen</button><button data-s="exit">Exit</button>';
+    + (view === 'results' && S.reveal ? '<button class="accent" data-s="closing">Closing slide →</button>' : '')
+    + (view === 'collect' && !S.cfg.timerEnd && S.cfg.timerLeft == null ? '<button data-s="welcome">← Welcome</button>' : '');
+  $('#dock').innerHTML = dock + `<span class="sep"></span><button data-s="notes">Notes</button><button data-s="fs">Full screen</button><button data-s="exit">Exit</button>`;
+  syncNotes();
+}
+const ICON = {
+  users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+  bulb: '<path d="M9 18h6M10 22h4M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/>',
+  bot: '<rect x="3" y="8" width="18" height="12" rx="2"/><path d="M12 8V4"/><circle cx="12" cy="3" r="1"/><path d="M9 13v2M15 13v2"/>',
+  trophy: '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
+  pen: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+  chart: '<path d="M3 3v18h18"/><path d="M8 17v-6M13 17V7M18 17v-4"/>',
+  wrench: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>',
+  sync: '<path d="M21 12a9 9 0 0 1-15.5 6.3L3 16M3 12a9 9 0 0 1 15.5-6.3L21 8"/><path d="M21 3v5h-5M3 21v-5h5"/>',
+  arrow: '<path d="M5 12h14M13 5l7 7-7 7"/>',
+};
+const svg = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k]}</svg>`;
+function stageWelcome(body) {
+  if (body.firstChild) return;
+  const steps = [['users', 'Team up', 'Your table is your team. Pick one person to submit.'],
+    ['bulb', 'Pick an idea', 'A problem to fix, a report to automate, a scorecard to generate.'],
+    ['bot', 'Build it', 'Have Claude, ChatGPT, Gemini or Copilot make a one-page HTML app.'],
+    ['trophy', 'Show & vote', 'Walk us through it. Every table votes for the best.']];
+  body.innerHTML = `<div class="s-slide">
+    <span class="s-kick rise" style="--d:0">Quarterly Leadership Meeting · Oct 12, 2026</span>
+    <h1 class="s-title rise" style="--d:1">The AI Build Challenge</h1>
+    <p class="s-lede rise" style="--d:2">One table. One idea. 15 minutes. Any AI tool.</p>
+    <div class="s-cards">${steps.map((x, i) => `<div class="s-card glass rise" style="--d:${i + 3}"><span class="n">0${i + 1}</span><div class="ic">${svg(x[0])}</div><h3>${x[1]}</h3><p>${x[2]}</p></div>`).join('')}</div>
+    <button class="s-go rise" style="--d:8" data-s="start">Launch the challenge  →</button>
+  </div>`;
+}
+function stageClosing(body) {
+  const t = tally(), top = t.rows[0], leaders = t.rows.filter(r => top && r.c === top.c && r.c > 0);
+  const win = leaders.length ? leaders.map(r => `${esc(projName(S.tables[tid(r.n)]))} (Table ${p2(r.n)})`).join(' & ') : '';
+  const sig = 'c' + win; if (body.dataset.sig === sig) return; body.dataset.sig = sig;
+  const uses = [['pen', 'Draft', 'emails, policies, SOPs'], ['chart', 'Analyze', 'reports and spreadsheets'], ['wrench', 'Build', 'trackers, forms, calculators'], ['sync', 'Automate', 'the work you repeat weekly']];
+  body.innerHTML = `<div class="s-slide">
+    <h1 class="s-title rise" style="--d:0;font-size:clamp(40px,5vw,80px)">AI isn't a search engine. <em>It's a teammate.</em></h1>
+    ${win ? `<span class="s-winner rise" style="--d:1">🏆 Congratulations, ${win}</span>` : ''}
+    <div class="s-compare">
+      <div class="s-box muted glass rise" style="--d:2"><div class="hd"><span class="ic">${svg('search')}</span>How most of us use it</div>
+        <ul><li>You ask a question</li><li>It gives you an answer</li><li>You still do all the work</li></ul></div>
+      <div class="arrow rise" style="--d:3">${svg('arrow')}</div>
+      <div class="s-box hero rise" style="--d:4"><div class="hd"><span class="ic">${svg('bot')}</span>What you did today</div>
+        <ul><li>You described what you needed</li><li>It built a working tool in minutes</li><li>No developers, no tickets, no budget</li></ul></div>
+    </div>
+    <div class="s-uses">${uses.map((u, i) => `<div class="s-use glass rise" style="--d:${i + 5}"><span class="ic">${svg(u[0])}</span><div><b>${u[1]}</b><span>${u[2]}</span></div></div>`).join('')}</div>
+  </div>`;
 }
 function stageBuild(body) {
   if (!body.firstChild) body.innerHTML = `<div class="s-split">
@@ -686,11 +806,17 @@ function stageShow(body) {
   $('#sxTitle').textContent = projName(t);
   $('#sxPitch').textContent = [t.pitch, `Presented by ${t.rep}`].filter(Boolean).join(' · ');
   $('#sxStrip').innerHTML = list.map((x, i) => `<button data-s="go" data-i="${i}" aria-current="${i === S.si}"><span>T${p2(x)} · ${esc(projName(S.tables[tid(x)]))}</span></button>`).join('');
-  const fr = $('#sxFrame'), key = `${n}/${t.submittedAt}`;
-  if (fr.dataset.k !== key) {
-    fr.dataset.k = key; fr.srcdoc = ''; $('#sxLoad').hidden = false; $('#sxLoad').textContent = 'Loading project…'; S.showStart = Date.now();
-    loadHtml(n).then(h => { if (fr.dataset.k === key) { fr.srcdoc = h; $('#sxLoad').hidden = true; } })
-      .catch(e => { if (fr.dataset.k === key) $('#sxLoad').textContent = 'Could not load this project. ' + errText(e); });
+  const key = `${n}/${t.submittedAt}`, wrap = $('#sxFrame').parentNode;
+  if ($('#sxFrame').dataset.k !== key) {
+    // a fresh iframe per project: reusing one can drop the new document in some browsers
+    const fr = document.createElement('iframe');
+    fr.id = 'sxFrame'; fr.title = 'Table project'; fr.dataset.k = key; fr.allowFullscreen = true;
+    fr.setAttribute('allow', 'fullscreen; clipboard-write');
+    fr.setAttribute('sandbox', 'allow-scripts allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-downloads allow-pointer-lock');
+    $('#sxFrame').replaceWith(fr);
+    $('#sxLoad').hidden = false; $('#sxLoad').textContent = 'Loading project…'; S.showStart = Date.now();
+    loadHtml(n).then(h => { if (fr.isConnected && fr.dataset.k === key) { fr.srcdoc = h; $('#sxLoad').hidden = true; } })
+      .catch(e => { if (fr.isConnected) $('#sxLoad').textContent = 'Could not load this project. ' + errText(e); });
   }
 }
 function stageVote(body) {
@@ -744,6 +870,106 @@ function timesUp() {
   $('#stage').appendChild(el); buzz(); setTimeout(() => el.remove(), 4000);
 }
 
+
+/* ---------- speaker notes (pop-out window for the laptop, or N for an on-stage drawer) ---------- */
+function notesFor(view) {
+  const subs = submitted().length, reg = groupsInPlay().filter(n => S.tables[tid(n)]).length, t = tally(), top = t.rows[0];
+  const leaders = t.rows.filter(r => top && r.c === top.c && r.c > 0);
+  const winner = leaders.length ? leaders.map(r => `${esc(projName(S.tables[tid(r.n)]))} from Table ${p2(r.n)}`).join(' and ') : '[the winning table]';
+  const P = s => `<p>${s}</p>`, CUE = s => `<p class="cue">${s}</p>`;
+  const N = {
+    welcome: ['Welcome · about 2½ minutes', [
+      CUE('Energy up. Step out from behind the podium.'),
+      P('Good morning, everyone! For those I haven\'t met, I\'m Mohammad Awad, Director of Corporate Informatics and Operations.'),
+      P('My team sits in the middle of a lot of what we do: pharmacy and infusion operations, revenue cycle and 340B analytics, and the apps and automation that help every department work faster.'),
+      P('Before I go any further, quick show of hands.'),
+      P('<b>Who here uses AI, at work or at home?</b> ChatGPT, Copilot, Claude, Gemini, anything like it.'), CUE('Pause. Raise your own hand. Look around the room.'),
+      P('Great. Now <b>keep your hand up if you mostly use it like a smarter Google search.</b> You ask it a question, it gives you an answer.'), CUE('Pause. Let people look around.'),
+      P('That\'s most of the room, and that\'s normal. That\'s how most people use it.'),
+      P('I was asked to come up here and talk about critical developments in informatics. I could stand here and walk you through my projects. Instead, I decided to show you what\'s possible, and you\'re going to do it yourselves.'),
+      P('Here\'s how it works. Each table is a team. You\'ve got 15 minutes to have any AI tool build you something that makes your work easier. A one-page HTML file. No coding experience needed. You just describe what you want.'),
+      P('It doesn\'t have to be a big problem. It can be automating a report you build by hand, generating a scorecard, a tracker, a checklist, a calculator. Anything your team does over and over.'),
+      '<h4>Ideas to read out (pick 3 or 4)</h4><ul>'
+        + '<li><b>Scorecard generator:</b> paste last month\'s numbers, get a printable red / yellow / green scorecard.</li>'
+        + '<li><b>Report automator:</b> upload an Excel export, it totals by department and draws the chart.</li>'
+        + '<li><b>Shift handoff builder:</b> fill in a few boxes, it writes a clean handoff summary to email.</li>'
+        + '<li><b>Supply par checker:</b> type what\'s on the shelf, it lists what to reorder.</li>'
+        + '<li><b>L10 meeting board:</b> agenda timer, scorecard, rocks, issues and to-dos on one screen.</li>'
+        + '<li><b>Staffing calculator:</b> census and staff on shift, flags units out of ratio.</li>'
+        + '<li><b>Budget variance tracker:</b> budget vs. actual, highlights anything 10% off.</li>'
+        + '<li><b>Onboarding checklist:</b> progress tracking and a printable sign-off sheet.</li></ul>',
+      P('The easiest way to start is one sentence: <b>"Build me a single HTML file that…"</b> and describe it. If it\'s not quite right, just tell it what to change.'),
+      P('One rule: <b>use made-up numbers and names.</b> No patient information and nothing confidential.'),
+      P('Then each table walks us through what they built, and every table votes for the best one.'),
+      CUE('Click “Launch the challenge”. Registration opens and the QR code appears.')]],
+    collect: ['Build · 15 minutes', [
+      CUE(`${reg} tables registered · ${subs} submitted`),
+      P('Scan the code, pick your table number, and enter one representative\'s name. That phone is the one that uploads and votes.'),
+      CUE('When tables are registered: press Start (or Space).'),
+      P('The clock is running. Go!'),
+      '<h4>While they build</h4><ul><li>Walk the room. Ask tables what they\'re building.</li>'
+        + '<li>Stuck table? Suggest: “Build me a single HTML file where I can paste last week\'s numbers and it builds a red / yellow / green scorecard.”</li>'
+        + '<li>Remind them: if it\'s not right, just tell the AI what to change.</li></ul>',
+      P('<b>At 5 minutes:</b> “Five minutes left. Save your file as .html and get it to your representative\'s phone.”'),
+      P('<b>At 1 minute:</b> “One minute! Upload what you have. It doesn\'t have to be perfect.”'),
+      CUE('At 0:00 uploads lock. +1 min reopens them. Then: Close submissions & start showcase.')]],
+    showcase: ['Showcase · about 2 minutes per table', [
+      P('Let\'s see what you built. Each table gets about two minutes.'),
+      '<h4>Ask each table</h4><ul><li>What were you trying to solve or automate?</li><li>Show it working.</li><li>What did you type to get it? What would you do with another hour?</li></ul>',
+      CUE('Use ← / → to move between projects. The walkthrough clock is top right.'),
+      CUE('After the last table: Open voting.')]],
+    voting: ['Voting · 1–2 minutes', [
+      P('Phones out. Every table gets one vote. You can\'t vote for yourself, and you can change your vote until I close it.'),
+      CUE(`The screen shows how many tables have voted, not who is winning. Close voting when everyone has voted.`)]],
+    results: ['Results', [
+      P('The votes are in…'), CUE('Press “Reveal winner”.'),
+      P(`Congratulations to <b>${winner}</b>! Give them a hand.`),
+      CUE('Then click “Closing slide →”.')]],
+    closing: ['Closing · about 1½ minutes', [
+      CUE('Slow down. Make eye contact.'),
+      P('Look at what just happened.'),
+      P('In fifteen minutes, every table in this room built a working tool, with no developers, no IT ticket and no budget. Most of you had never written a line of code. You didn\'t need to.'),
+      P('Remember the show of hands at the start? Most of you said you use AI like a smarter Google search. You ask a question, you get an answer, and then you still do all the work yourself.'),
+      P('What you did today is different. You described what you needed, and AI built it with you. That\'s the shift: <b>AI isn\'t a search engine. It\'s a teammate.</b>'),
+      P('And it\'s not just apps. It can draft the email, the policy or the SOP. It can analyze the report you dread every month. It can build the tracker or the form your team keeps asking for. And it can automate the thing you do by hand every single week.'),
+      P('So here\'s my ask. Go back to your teams and pick one task you repeat every week. Before you do it by hand again, ask AI to help you build the fix. And if it\'s bigger than one table can handle, bring it to me. That\'s what informatics is here for.'),
+      P(`Congratulations again to <b>${winner}</b>, and thank you all!`)]],
+  };
+  const [h, parts] = N[view] || N.collect;
+  return `<div class="nh">${h}</div>${parts.join('')}`;
+}
+const NOTES_CSS = `body{margin:0;background:#0b2b45;color:#e8eef3;font:18px/1.55 "Plus Jakarta Sans",system-ui,sans-serif}
+.bar{position:sticky;top:0;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 20px;background:#071d30;border-bottom:1px solid #24394b}
+.bar b{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#f68b1e}.bar span{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums}
+main{padding:18px 24px 60px;max-width:760px}.nh{font-size:14px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#38b2e6;margin-bottom:10px}
+p{margin:0 0 14px}.cue{color:#ffb15c;font-weight:700;font-size:15px}h4{margin:18px 0 6px;font-size:15px;color:#38b2e6}ul{margin:0 0 14px;padding-left:20px}li{margin-bottom:6px}`;
+let notesWin = null;
+function openNotes() {
+  notesWin = window.open('', 'ips-speaker-notes', 'width=620,height=860');
+  if (!notesWin) { S.drawer = true; renderStage(); toast('Pop-ups are blocked, so notes are shown on stage instead. Press N to hide.'); return; }
+  notesWin.document.open();
+  notesWin.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Speaker notes · AI Build Challenge</title><style>${NOTES_CSS}</style></head><body><div class="bar"><b>Speaker notes</b><span id="clk"></span></div><main id="c"></main></body></html>`);
+  notesWin.document.close();
+  S.notesSig = ''; syncNotes();
+}
+function syncNotes() {
+  const view = S.stage ? stageView() : (S.cfgExists ? S.cfg.phase : 'welcome');
+  const html = notesFor(view);
+  const dr = $('#notesDrawer');
+  dr.hidden = !(S.stage && S.drawer);
+  if (!dr.hidden && dr.dataset.sig !== html) { dr.innerHTML = `<style>#notesDrawer .nh{font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#38b2e6;margin-bottom:10px}#notesDrawer p{margin:0 0 12px}#notesDrawer .cue{color:#ffb15c;font-weight:700;font-size:14px}#notesDrawer h4{margin:14px 0 6px;color:#38b2e6}#notesDrawer ul{margin:0 0 12px;padding-left:20px}</style>` + html; dr.dataset.sig = html; }
+  if (notesWin && !notesWin.closed) {
+    const c = notesWin.document.getElementById('c');
+    if (c && S.notesSig !== html) { c.innerHTML = html; S.notesSig = html; notesWin.scrollTo(0, 0); }
+  }
+}
+function notesClock() {
+  if (!notesWin || notesWin.closed) return;
+  const el = notesWin.document.getElementById('clk'); if (!el) return;
+  const t = timer(), v = S.stage ? stageView() : S.cfg.phase;
+  el.textContent = v === 'collect' && t.state !== 'idle' ? (t.state === 'done' ? "Time's up" : fmt(t.left)) : new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
+
 /* ---------- 4x per second: timers and clocks ---------- */
 function tick() {
   const t = timer(), u = urgency(t), ph = S.cfg.phase, show = S.ready && S.cfgExists && ph === 'collect' && !S.isHost;
@@ -777,6 +1003,7 @@ function tick() {
     S.lastTimerState = sig; renderMine(); if (S.isHost) { renderHost(); if (S.stage) renderStage(); }
   }
   S.lastTimerState = sig;
+  notesClock();
 }
 setInterval(tick, 250);
 
@@ -790,9 +1017,9 @@ async function openProject(n) {
   $('#viewer').hidden = false; document.body.style.overflow = 'hidden';
   $('#vGroup').textContent = `${projName(t)}`; $('#vFile').textContent = `Table ${p2(n)} · ${t.rep}${t.pitch ? ' · ' + t.pitch : ''}`;
   $('#vLoading').hidden = false; $('#vLoading').textContent = 'Loading project…';
-  const fr = $('#vFrame'); fr.srcdoc = '';
+  const fr = $('#vFrame').cloneNode(false); fr.removeAttribute('srcdoc'); $('#vFrame').replaceWith(fr);
   syncVote();
-  try { const h = await loadHtml(n); if (vTable !== n) return; fr.srcdoc = h; $('#vLoading').hidden = true; }
+  try { const h = await loadHtml(n); if (vTable !== n || !fr.isConnected) return; fr.srcdoc = h; $('#vLoading').hidden = true; }
   catch (e) { $('#vLoading').textContent = 'Could not load this project. ' + errText(e); }
 }
 function syncVote() {
@@ -802,7 +1029,7 @@ function syncVote() {
   if (can) { const voted = S.votes[mt.id]?.forTable === tid(n); btn.textContent = voted ? 'Your vote ✓' : `Vote for Table ${p2(n)}`; btn.disabled = voted || S.busy; btn.className = voted ? '' : 'primary'; }
   $('#vPrev').hidden = $('#vNext').hidden = vOrder.length < 2;
 }
-function closeViewer() { $('#viewer').hidden = true; $('#vFrame').srcdoc = ''; document.body.style.overflow = S.stage ? 'hidden' : ''; vTable = null; }
+function closeViewer() { $('#viewer').hidden = true; $('#vFrame').replaceWith($('#vFrame').cloneNode(false)); document.body.style.overflow = S.stage ? 'hidden' : ''; vTable = null; }
 function step(d) { if (vOrder.length < 2) return; vIndex = (vIndex + d + vOrder.length) % vOrder.length; openProject(vOrder[vIndex]); }
 
 /* ---------- actions ---------- */
@@ -883,6 +1110,7 @@ async function release(n) {
 }
 async function hostAction(a) {
   if (a === 'reset') { S.confirm = true; return render(); }
+  S.slide = null;
   S.busy = true; render();
   const patch = a === 'open' ? { phase: 'collect' } : { phase: a };
   if (a === 'showcase' && S.cfg.phase === 'collect') { const t = timer(); if (t.state === 'running') Object.assign(patch, { timerEnd: 0, timerLeft: 0 }); S.si = 0; }
@@ -908,11 +1136,13 @@ async function timerAction(a, ms) {
   S.busy = false; render();
 }
 function openStage() {
-  S.stage = true; document.body.style.overflow = 'hidden'; $('#sBody').dataset.view = ''; render();
+  S.stage = true; document.body.style.overflow = 'hidden'; $('#sBody').dataset.view = '';
+  S.slide = (!S.cfgExists || (S.cfg.phase === 'collect' && timer().state === 'idle' && !submitted().length)) ? 'welcome' : null;
+  render();
   const el = document.documentElement; if (el.requestFullscreen && !document.fullscreenElement) el.requestFullscreen().catch(() => {});
   pokeDock();
 }
-function closeStage() { S.stage = false; document.body.style.overflow = ''; if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); render(); }
+function closeStage() { S.stage = false; S.drawer = false; document.body.style.overflow = ''; if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); render(); }
 function stageGo(i) { const n = submitted().length; if (!n) return; S.si = (i + n) % n; renderStage(); }
 let dockT;
 function pokeDock() { const d = $('#dock'); d.classList.remove('hide'); clearTimeout(dockT); dockT = setTimeout(() => { if (!d.matches(':hover')) d.classList.add('hide'); }, 3000); }
@@ -934,9 +1164,15 @@ document.addEventListener('click', e => {
     if (s === 'next') return stageGo(S.si + 1);
     if (s === 'go') return stageGo(Number(t.dataset.i));
     if (s === 'reveal') { S.reveal = true; renderStage(); confetti(); return; }
+    if (s === 'start') { S.slide = null; if (!S.cfgExists) return hostAction('open'); return renderStage(); }
+    if (s === 'welcome') { S.slide = 'welcome'; return renderStage(); }
+    if (s === 'closing') { S.slide = 'closing'; return renderStage(); }
+    if (s === 'back') { S.slide = null; return renderStage(); }
+    if (s === 'notes') return openNotes();
   }
 });
 $('#openStage').addEventListener('click', openStage);
+$('#openNotes').addEventListener('click', openNotes);
 $('#joinBtn').addEventListener('click', register);
 $('#nameInput').addEventListener('input', updateJoinBtn);
 $('#nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') register(); });
@@ -964,11 +1200,12 @@ document.addEventListener('keydown', e => {
   if (e.target.matches('input,select,textarea')) return;
   if (S.stage) {
     pokeDock();
-    const ph = S.cfg.phase;
+    const ph = S.slide || S.cfg.phase;
     if (e.key === 'Escape' && !document.fullscreenElement) closeStage();
+    if (e.key === 'n' || e.key === 'N') { S.drawer = !S.drawer; syncNotes(); }
     if (ph === 'showcase' && (e.key === 'ArrowRight' || e.key === 'PageDown')) { e.preventDefault(); stageGo(S.si + 1); }
     if (ph === 'showcase' && (e.key === 'ArrowLeft' || e.key === 'PageUp')) { e.preventDefault(); stageGo(S.si - 1); }
-    if (ph === 'collect' && e.key === ' ') { e.preventDefault(); const t = timer(); if (t.state === 'running') timerAction('pause'); else if (t.state !== 'done') timerAction('start'); }
+    if (ph === 'collect' && S.cfgExists && e.key === ' ') { e.preventDefault(); const t = timer(); if (t.state === 'running') timerAction('pause'); else if (t.state !== 'done') timerAction('start'); }
     if (e.key === 'f' || e.key === 'F') { const el = document.documentElement; document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen?.().catch(() => {}); }
     return;
   }
