@@ -381,6 +381,7 @@ td.clip{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowra
       <div class="row">
         <button class="accent" id="openStage">▶ Presenter view</button>
         <button id="openNotes">Speaker notes</button>
+        <button class="sm ghost" id="testBust" title="Shows the cheating pop-up on the presenter view">Test pop-up</button>
         <label for="groupCount" class="small muted">Tables</label><select id="groupCount"></select>
         <button class="ghost sm" id="signOut">Sign out</button>
       </div>
@@ -619,6 +620,7 @@ function render() {
   else mc.hidden = true;
   const n = $('#notice');
   if (S.fatal) { n.hidden = false; n.className = 'notice err'; n.textContent = S.fatal; }
+  else if (S.ready && S.isHost && S.bustErr) { n.hidden = false; n.className = 'notice err'; n.textContent = S.bustErr; }
   else if (S.ready && S.isHost && !S.cfgExists) { n.hidden = false; n.className = 'notice'; n.textContent = 'First run: set the number of tables, then press Open registration.'; }
   else n.hidden = true;
   $('#hostLogin').hidden = !(HOST_MODE && !S.isHost && !S.fatal);
@@ -790,7 +792,7 @@ function renderStage() {
     + phaseButtons(true) + (view === 'results' && !S.reveal ? '<button class="accent" data-s="reveal">🏆 Reveal winner</button>' : '')
     + (view === 'results' && S.reveal ? '<button class="accent" data-s="closing">Closing slide →</button>' : '')
     + (view === 'collect' && !S.cfg.timerEnd && S.cfg.timerLeft == null ? '<button data-s="welcome">← Welcome</button>' : '');
-  $('#dock').innerHTML = dock + `<span class="sep"></span><button data-s="notes">Notes</button><button data-s="fs">Full screen</button><button data-s="exit">Exit</button>`;
+  $('#dock').innerHTML = dock + `<span class="sep"></span><button data-s="testbust" title="Test the cheating pop-up">🚨</button><button data-s="notes">Notes</button><button data-s="fs">Full screen</button><button data-s="exit">Exit</button>`;
   syncNotes();
 }
 const ICON = {
@@ -1351,7 +1353,10 @@ function openVideo() {
 }
 async function reportBust() {
   const mt = myTable(); if (!mt) return;
-  try { await setDoc(doc(db, 'busted', mt.id), { table: mt.table, at: Date.now() }); } catch (e) { /* rules not published yet: phone still shows the clip */ }
+  for (let i = 0; i < 2; i++) {
+    try { await setDoc(doc(db, 'busted', mt.id), { table: mt.table, at: Date.now() }); return; }
+    catch (e) { console.warn('busted ping failed', e && e.code); await new Promise(r => setTimeout(r, 1500)); }
+  }
 }
 
 /* ---------- projector: someone clicked the "host preview" link ---------- */
@@ -1408,6 +1413,7 @@ document.addEventListener('click', e => {
     if (s === 'closing') { S.slide = 'closing'; return renderStage(); }
     if (s === 'back') { S.slide = null; return renderStage(); }
     if (s === 'notes') return openNotes();
+    if (s === 'testbust') { bustQueue.push(Object.keys(S.tables).sort()[0] || 't01'); return nextBust(); }
     if (s === 'demo') { S.slide = 'demo'; return renderStage(); }
     if (s === 'replay') return runDemo();
   }
@@ -1417,6 +1423,7 @@ $('#peekBtn').addEventListener('click', openVideo);
 $('#vidClose').addEventListener('click', closeVideo);
 $('#vidModal').addEventListener('click', e => { if (e.target.id === 'vidModal') closeVideo(); });
 $('#openNotes').addEventListener('click', openNotes);
+$('#testBust').addEventListener('click', () => { if (!S.stage) openStage(); const id = Object.keys(S.tables).sort()[0] || 't01'; setTimeout(() => { bustQueue.push(id); nextBust(); }, 600); });
 $('#joinBtn').addEventListener('click', register);
 $('#nameInput').addEventListener('input', updateJoinBtn);
 $('#nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') register(); });
@@ -1477,7 +1484,15 @@ function subscribe() {
   }, fail));
   unsubs.push(onSnapshot(collection(db, 'tables'), q => { S.tables = {}; q.forEach(d => S.tables[d.id] = d.data()); render(); }, fail));
   unsubs.push(onSnapshot(collection(db, 'votes'), q => { S.votes = {}; q.forEach(d => S.votes[d.id] = d.data()); render(); }, fail));
-  if (S.isHost) unsubs.push(onSnapshot(collection(db, 'busted'), onBusted, () => {}));
+  if (S.isHost) listenBusted();
+}
+let bustUnsub = null, bustRetry;
+function listenBusted() {
+  if (bustUnsub) bustUnsub();
+  bustUnsub = onSnapshot(collection(db, 'busted'), q => { S.bustErr = ''; onBusted(q); render(); }, e => {
+    S.bustErr = (e && e.code || '').includes('permission') ? 'The cheating pop-up can\'t reach this screen. Publish the latest firestore.rules, then refresh.' : 'The cheating pop-up lost its connection. Retrying…';
+    render(); clearTimeout(bustRetry); bustRetry = setTimeout(listenBusted, 8000);
+  });
 }
 
 if (firebaseConfig.apiKey.startsWith('PASTE')) {
