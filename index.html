@@ -285,9 +285,40 @@ td.clip{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowra
 .s-use b{display:block;font-size:clamp(16px,1.35vw,21px)}
 .s-use span{font-size:clamp(13px,1.05vw,16px);color:#bfe3f1}
 .s-winner{justify-self:start;display:inline-flex;gap:10px;align-items:center;padding:10px 18px;border-radius:999px;background:rgba(246,139,30,.16);border:1px solid rgba(246,139,30,.55);color:#ffcf9c;font-weight:700;font-size:clamp(14px,1.2vw,18px)}
-.stage > .notes-drawer{position:absolute;right:16px;top:70px;bottom:90px;width:min(460px,40vw);z-index:20;overflow:auto;padding:20px 22px;border-radius:16px;background:#04121c;isolation:isolate;border:1px solid rgba(255,255,255,.18);box-shadow:0 20px 60px rgba(0,0,0,.6);font-size:16px;line-height:1.55}
+.stage > .net{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:.55}
+.stage[data-view="demo"] .orb.b{left:60%;top:35%;width:55vw;height:55vw}
+.stage[data-view="demo"] .orb.o{left:-20%;top:-40%;width:45vw;height:45vw}
+.s-demo{flex:1;display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.6fr);gap:clamp(16px,2vw,32px);min-height:0;padding-bottom:70px}
+.s-demo .left{display:grid;align-content:center;gap:18px}
+.bubble{padding:18px 20px;border-radius:18px;font-size:clamp(16px,1.4vw,22px);line-height:1.45}
+.bubble.you{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-bottom-left-radius:6px}
+.bubble.ai{background:rgba(0,142,197,.18);border:1px solid rgba(56,178,230,.45);border-bottom-left-radius:6px}
+.bubble .who{display:block;font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;margin-bottom:6px;color:#f68b1e}
+.bubble.ai .who{color:#38b2e6}
+.caret{display:inline-block;width:.55em;height:1.05em;background:#f68b1e;vertical-align:-.15em;margin-left:2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.dots i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#38b2e6;margin-right:4px;animation:bounce 1s infinite}
+.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+@keyframes bounce{50%{transform:translateY(-6px);opacity:.5}}
+.d-stats{display:flex;gap:12px;flex-wrap:wrap}
+.d-stat{padding:12px 16px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);min-width:120px}
+.d-stat b{display:block;font-size:clamp(24px,2.4vw,38px);font-variant-numeric:tabular-nums}
+.d-stat span{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#93a4b3;font-weight:700}
+.d-done{color:#7be0ad;font-weight:800;font-size:clamp(16px,1.4vw,22px)}
+.s-demo .right{position:relative;min-height:0;border-radius:18px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.5)}
+.d-code{position:absolute;inset:0;background:#06131f;border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:18px 20px;overflow:hidden;font:clamp(11px,.85vw,14px)/1.5 ui-monospace,Consolas,"SF Mono",monospace;color:#c9d6e2;white-space:pre-wrap;transition:opacity .8s,transform .8s}
+.d-code .dbar{display:flex;gap:7px;margin:0 0 12px;height:11px}.d-code .dbar i{display:block;flex:none;width:11px;height:11px;border-radius:50%;background:#2c3e50}.d-code .dbar i:first-child{background:#ff5f57}.d-code .dbar i:nth-child(2){background:#febc2e}.d-code .dbar i:nth-child(3){background:#28c840}
+.d-code .t{color:#38b2e6}.d-code .a{color:#ffb15c}.d-code .s{color:#7be0ad}.d-code .c{color:#5f7a92}
+.d-app{position:absolute;inset:0;border-radius:18px;background:#fff;opacity:0;transform:scale(.96);transition:opacity .9s cubic-bezier(.2,.8,.2,1),transform .9s cubic-bezier(.2,.8,.2,1)}
+.d-app iframe{width:100%;height:100%;border:0;border-radius:18px}
+.s-demo.built .d-app{opacity:1;transform:none}
+.s-demo.built .d-code{opacity:0;transform:scale(1.03)}
+.s-built{justify-self:start;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;padding:12px 18px;border-radius:14px;background:rgba(0,142,197,.14);border:1px solid rgba(56,178,230,.4);font-size:clamp(14px,1.2vw,19px);color:#d6ecf7}
+.s-built b{font-size:clamp(20px,1.8vw,28px);color:#fff;font-variant-numeric:tabular-nums}
+@media (max-width:900px){.s-demo{grid-template-columns:1fr}}
+.notes-drawer{position:absolute;right:16px;top:70px;bottom:90px;width:min(460px,40vw);z-index:20;overflow:auto;padding:20px 22px;border-radius:16px;background:#04121c;isolation:isolate;border:1px solid rgba(255,255,255,.18);box-shadow:0 20px 60px rgba(0,0,0,.6);font-size:16px;line-height:1.55}
 @media (max-width:900px){.s-cards,.s-uses{grid-template-columns:repeat(2,minmax(0,1fr))}.s-compare{grid-template-columns:1fr}.s-compare .arrow{transform:rotate(90deg)}}
-@media (prefers-reduced-motion: reduce){.s-huge.crit,.timesup{animation:none}.s-bars .track i{transition:none}.confetti{display:none}.rise,.s-body.enter > *{animation:none}.orb{transition:none}}
+@media (prefers-reduced-motion: reduce){.net{display:none}.caret,.dots i{animation:none}.s-huge.crit,.timesup{animation:none}.s-bars .track i{transition:none}.confetti{display:none}.rise,.s-body.enter > *{animation:none}.orb{transition:none}}
 </style>
 </head>
 <body>
@@ -434,7 +465,7 @@ td.clip{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowra
 
 <!-- PRESENTER STAGE -->
 <div id="stage" class="stage" hidden role="dialog" aria-modal="true" aria-label="Presenter view" data-view="">
-  <div class="orb b" aria-hidden="true"></div><div class="orb o" aria-hidden="true"></div>
+  <div class="orb b" aria-hidden="true"></div><div class="orb o" aria-hidden="true"></div><canvas class="net" id="net" aria-hidden="true"></canvas>
   <div class="s-top">
     <div class="brand"><div class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#f68b1e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 6.1L20.5 10l-6.1 2.4L12 18.5l-2.4-6.1L3.5 10l6.1-1.9z"/></svg></div><h2>AI Build Challenge</h2></div>
     <div class="row"><span class="s-mini" id="sMini" hidden></span></div>
@@ -703,12 +734,14 @@ function renderStage() {
   st.hidden = false;
   const body = $('#sBody'), view = stageView();
   st.dataset.view = view;
-  st.scrollLeft = 0; st.scrollTop = 0;
+  st.scrollLeft = 0; st.scrollTop = 0; startNet();
   if (body.dataset.view !== view) {
     body.dataset.view = view; body.dataset.sig = ''; body.innerHTML = '';
     body.classList.remove('enter'); void body.offsetWidth; body.classList.add('enter');
   }
+  if (view !== 'demo') stopDemo();
   if (view === 'welcome') stageWelcome(body);
+  else if (view === 'demo') stageDemo(body);
   else if (view === 'closing') stageClosing(body);
   else if (view === 'collect') stageBuild(body);
   else if (view === 'showcase') stageShow(body);
@@ -716,7 +749,8 @@ function renderStage() {
   else stageResults(body);
   const b = S.busy ? 'disabled' : '';
   let dock;
-  if (view === 'welcome') dock = `<button class="accent" data-s="start" ${b}>Start: show the QR code →</button>`;
+  if (view === 'welcome') dock = `<button class="accent" data-s="demo">Next: watch AI build it →</button><button data-s="start" ${b}>Skip to launch</button>`;
+  else if (view === 'demo') dock = `<button data-s="welcome">← Welcome</button><button data-s="replay">↻ Replay</button><button class="accent" data-s="start" ${b}>Launch the challenge →</button>`;
   else if (view === 'closing') dock = '<button data-s="back">← Back to results</button>';
   else dock = (view === 'collect' ? timerButtons(true) + '<span class="sep"></span>' : '')
     + phaseButtons(true) + (view === 'results' && !S.reveal ? '<button class="accent" data-s="reveal">🏆 Reveal winner</button>' : '')
@@ -746,11 +780,22 @@ function stageWelcome(body) {
     ['trophy', 'Show & vote', 'Walk us through it. Every table votes for the best.']];
   body.innerHTML = `<div class="s-slide">
     <span class="s-kick rise" style="--d:0">Quarterly Leadership Meeting · Oct 12, 2026</span>
-    <h1 class="s-title rise" style="--d:1">The AI Build Challenge</h1>
+    <h1 class="s-title rise" style="--d:1" id="wTitle">The AI Build Challenge</h1>
     <p class="s-lede rise" style="--d:2">One table. One idea. 15 minutes. Any AI tool.</p>
     <div class="s-cards">${steps.map((x, i) => `<div class="s-card glass rise" style="--d:${i + 3}"><span class="n">0${i + 1}</span><div class="ic">${svg(x[0])}</div><h3>${x[1]}</h3><p>${x[2]}</p></div>`).join('')}</div>
-    <button class="s-go rise" style="--d:8" data-s="start">Launch the challenge  →</button>
+    <button class="s-go rise" style="--d:8" data-s="demo">Watch AI build one live  →</button>
   </div>`;
+  scramble($('#wTitle'), 400);
+}
+function scramble(el, delay) {
+  if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const target = el.textContent, glyphs = '01<>/{}[]#$%&*+=?ABCDEFGHJKLMNPQRSTUVWXYZ';
+  let frame = 0; const total = 28;
+  setTimeout(function step() {
+    if (!el.isConnected) return;
+    el.textContent = [...target].map((ch, i) => ch === ' ' || i < (frame / total) * target.length ? ch : glyphs[Math.floor(Math.random() * glyphs.length)]).join('');
+    if (++frame <= total) setTimeout(step, 38); else el.textContent = target;
+  }, delay);
 }
 function stageClosing(body) {
   const t = tally(), top = t.rows[0], leaders = t.rows.filter(r => top && r.c === top.c && r.c > 0);
@@ -768,7 +813,10 @@ function stageClosing(body) {
         <ul><li>You described what you needed</li><li>It built a working tool in minutes</li><li>No developers, no tickets, no budget</li></ul></div>
     </div>
     <div class="s-uses">${uses.map((u, i) => `<div class="s-use glass rise" style="--d:${i + 5}"><span class="ic">${svg(u[0])}</span><div><b>${u[1]}</b><span>${u[2]}</span></div></div>`).join('')}</div>
+    <div class="s-built rise" style="--d:10">This website, from the timer and QR codes to the voting and these slides, was built with AI: <b id="locCount">0</b> lines of code.</div>
   </div>`;
+  const lines = document.documentElement.outerHTML.split('\n').length, cEl = $('#locCount');
+  setTimeout(() => countUp(cEl, lines, 1800), 1700);
 }
 function stageBuild(body) {
   if (!body.firstChild) body.innerHTML = `<div class="s-split">
@@ -871,6 +919,94 @@ function timesUp() {
 }
 
 
+
+/* ---------- live demo: prompt -> code -> working app ---------- */
+const DEMO_SRC = "<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Monthly Scorecard Generator<\/title>\n<style>\n  body { font-family: system-ui, \"Segoe UI\", sans-serif; margin: 0; background: #f4f7fa; color: #0f1e2b; }\n  header { background: #0b2b45; color: #fff; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }\n  h1 { font-size: 22px; margin: 0; }\n  .wrap { display: grid; grid-template-columns: 290px 1fr; gap: 20px; padding: 20px; }\n  label small { color: #5b6b79; }\n  textarea { width: 100%; height: 250px; margin-top: 8px; font: 13px ui-monospace, Consolas, monospace; border: 1px solid #cfd8e0; border-radius: 10px; padding: 10px; box-sizing: border-box; }\n  .kpis { display: flex; gap: 12px; margin-bottom: 14px; }\n  .kpi { flex: 1; border-radius: 12px; padding: 12px 14px; color: #fff; font-weight: 700; }\n  .kpi b { display: block; font-size: 30px; }\n  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,.06); }\n  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #eef2f5; font-size: 14px; }\n  th { background: #eef2f5; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: #5b6b79; }\n  .dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; vertical-align: -1px; }\n  .g { background: #1a8a55; } .y { background: #d99a00; } .r { background: #c0392b; }\n  button { background: #f68b1e; border: 0; color: #2b1500; font-weight: 700; padding: 8px 16px; border-radius: 8px; cursor: pointer; }\n<\/style>\n<\/head>\n<body>\n<header>\n  <h1>Monthly Scorecard Generator<\/h1>\n  <button onclick=\"window.print()\">Print scorecard<\/button>\n<\/header>\n<div class=\"wrap\">\n  <div>\n    <label><b>Paste your numbers<\/b><br><small>Metric, Target, Actual, Higher or Lower is better<\/small><\/label>\n    <textarea id=\"data\">Patient satisfaction %, 90, 92, Higher\nDays in A/R, 45, 52, Lower\nClean claim rate %, 95, 93.5, Higher\nED wait time (min), 30, 27, Lower\nDenial rate %, 5, 5.2, Lower\nStaff turnover %, 12, 15, Lower\nScripts filled per day, 400, 431, Higher<\/textarea>\n  <\/div>\n  <div>\n    <div class=\"kpis\">\n      <div class=\"kpi g\">On target<b id=\"ng\">0<\/b><\/div>\n      <div class=\"kpi y\">Watch<b id=\"ny\">0<\/b><\/div>\n      <div class=\"kpi r\">Off target<b id=\"nr\">0<\/b><\/div>\n    <\/div>\n    <table>\n      <thead><tr><th>Metric<\/th><th>Target<\/th><th>Actual<\/th><th>Status<\/th><\/tr><\/thead>\n      <tbody id=\"rows\"><\/tbody>\n    <\/table>\n  <\/div>\n<\/div>\n<script>\n  const el = id => document.getElementById(id);\n  const LABEL = { g: \"On target\", y: \"Watch\", r: \"Off target\" };\n\n  function render() {\n    const count = { g: 0, y: 0, r: 0 };\n    const rows = el(\"data\").value.trim().split(\"\\n\")\n      .map(line => line.split(\",\").map(s => s.trim()))\n      .filter(r => r.length >= 3 && !isNaN(+r[1]) && !isNaN(+r[2]));\n\n    el(\"rows\").innerHTML = rows.map(([metric, target, actual, dir]) => {\n      const higherIsBetter = !/lower/i.test(dir || \"\");\n      const gap = higherIsBetter ? (actual - target) / target : (target - actual) / target;\n      const status = gap >= 0 ? \"g\" : gap >= -0.05 ? \"y\" : \"r\";\n      count[status]++;\n      return \"<tr><td>\" + metric + \"<\/td><td>\" + target + \"<\/td><td>\" + actual +\n        \"<\/td><td><span class='dot \" + status + \"'><\/span>\" + LABEL[status] + \"<\/td><\/tr>\";\n    }).join(\"\");\n\n    el(\"ng\").textContent = count.g;\n    el(\"ny\").textContent = count.y;\n    el(\"nr\").textContent = count.r;\n  }\n\n  el(\"data\").addEventListener(\"input\", render);\n  render();\n<\/script>\n<\/body>\n<\/html>\n";
+const DEMO_PROMPT = 'Build me a single HTML file where I paste last month\'s numbers and it creates a red / yellow / green scorecard I can print.';
+let demoTimers = [];
+function stopDemo() { demoTimers.forEach(clearTimeout); demoTimers = []; }
+const later = (fn, ms) => demoTimers.push(setTimeout(fn, ms));
+function countUp(el, to, ms) {
+  if (!el) return; const t0 = performance.now();
+  (function f(now) { if (!el.isConnected) return; const k = Math.min(1, (now - t0) / ms); el.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))).toLocaleString(); if (k < 1) requestAnimationFrame(f); })(t0);
+}
+function hl(code) {
+  return esc(code)
+    .replace(/(&lt;!--[\s\S]*?--&gt;)/g, '<span class="c">$1</span>')
+    .replace(/(&lt;\/?)([a-zA-Z0-9]+)/g, '$1<span class="t">$2</span>')
+    .replace(/(&quot;[^&]*?&quot;)/g, '<span class="s">$1</span>')
+    .replace(/\b(const|function|return|if|let|document|addEventListener)\b/g, '<span class="a">$1</span>');
+}
+function stageDemo(body) {
+  if (body.firstChild) return;
+  body.innerHTML = `<div class="s-demo" id="demo">
+    <div class="left">
+      <span class="s-kick rise" style="--d:0">Watch AI build one, live</span>
+      <div class="bubble you rise" style="--d:1"><span class="who">You type</span><span id="dPrompt"></span><span class="caret" id="dCaret"></span></div>
+      <div class="bubble ai" id="dAi" hidden><span class="who">AI</span><span id="dAiText"><span class="dots"><i></i><i></i><i></i></span> Writing the code…</span></div>
+      <div class="d-stats" id="dStats" hidden><div class="d-stat"><b id="dLines">0</b><span>lines written</span></div><div class="d-stat"><b id="dSecs">0.0s</b><span>elapsed</span></div></div>
+      <div class="d-done" id="dDone" hidden>✓ Working app. Try it: change a number.</div>
+    </div>
+    <div class="right rise" style="--d:2">
+      <div class="d-code" id="dCode"><div class="dbar"><i></i><i></i><i></i></div><span id="dCodeText"></span></div>
+      <div class="d-app" id="dApp"></div>
+    </div></div>`;
+  runDemo();
+}
+function runDemo() {
+  stopDemo();
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const demo = $('#demo'); if (!demo) return;
+  demo.classList.remove('built'); $('#dApp').innerHTML = ''; $('#dCodeText').innerHTML = '';
+  $('#dPrompt').textContent = ''; $('#dAi').hidden = $('#dStats').hidden = $('#dDone').hidden = true; $('#dCaret').hidden = false;
+  $('#dAiText').innerHTML = '<span class="dots"><i></i><i></i><i></i></span> Writing the code…';
+  let i = 0;
+  const typeP = () => { if (!$('#dPrompt')) return; $('#dPrompt').textContent = DEMO_PROMPT.slice(0, ++i); if (i < DEMO_PROMPT.length) later(typeP, reduce ? 0 : 32); else later(startCode, 600); };
+  const startCode = () => {
+    $('#dCaret').hidden = true; $('#dAi').hidden = false; $('#dStats').hidden = false;
+    const total = DEMO_SRC.length, t0 = performance.now(), dur = reduce ? 1 : 9000; let pos = 0;
+    const step = () => {
+      const el = $('#dCodeText'); if (!el) return;
+      pos = Math.min(total, Math.ceil(total * Math.min(1, (performance.now() - t0) / dur)));
+      const shown = DEMO_SRC.slice(0, pos);
+      el.innerHTML = hl(shown.split('\n').slice(-60).join('\n'));
+      $('#dLines').textContent = shown.split('\n').length;
+      $('#dSecs').textContent = ((performance.now() - t0) / 1000).toFixed(1) + 's';
+      if (pos < total) later(step, 40); else later(finish, 500);
+    };
+    later(step, 300);
+  };
+  const finish = () => {
+    $('#dAiText').textContent = 'Done. Here\'s your scorecard generator.';
+    const fr = document.createElement('iframe'); fr.title = 'AI-built scorecard demo';
+    fr.setAttribute('sandbox', 'allow-scripts allow-modals'); fr.srcdoc = DEMO_SRC;
+    $('#dApp').appendChild(fr);
+    later(() => { $('#demo') && $('#demo').classList.add('built'); $('#dDone').hidden = false; }, 150);
+  };
+  later(typeP, reduce ? 0 : 1100);
+}
+
+/* ---------- AI network background ---------- */
+(function net() {
+  const cv = $('#net'), ctx = cv.getContext('2d'); let W = 0, H = 0, pts = [], raf = 0;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function size() { const r = devicePixelRatio || 1; W = cv.clientWidth; H = cv.clientHeight; cv.width = W * r; cv.height = H * r; ctx.setTransform(r, 0, 0, r, 0, 0);
+    const n = Math.round(Math.min(90, W * H / 22000)); pts = Array.from({ length: n }, () => ({ x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - .5) * .35, vy: (Math.random() - .5) * .35, o: Math.random() < .18 })); }
+  function draw() {
+    raf = 0; if ($('#stage').hidden || reduce) return;
+    if (cv.clientWidth !== W || cv.clientHeight !== H) size();
+    ctx.clearRect(0, 0, W, H);
+    for (const p of pts) { p.x += p.vx; p.y += p.vy; if (p.x < 0 || p.x > W) p.vx *= -1; if (p.y < 0 || p.y > H) p.vy *= -1; }
+    for (let a = 0; a < pts.length; a++) for (let b = a + 1; b < pts.length; b++) {
+      const dx = pts[a].x - pts[b].x, dy = pts[a].y - pts[b].y, d = dx * dx + dy * dy;
+      if (d < 150 * 150) { ctx.strokeStyle = `rgba(56,178,230,${(1 - Math.sqrt(d) / 150) * .35})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(pts[a].x, pts[a].y); ctx.lineTo(pts[b].x, pts[b].y); ctx.stroke(); }
+    }
+    for (const p of pts) { ctx.fillStyle = p.o ? 'rgba(246,139,30,.9)' : 'rgba(191,227,241,.75)'; ctx.beginPath(); ctx.arc(p.x, p.y, p.o ? 2.6 : 1.8, 0, 7); ctx.fill(); }
+    raf = requestAnimationFrame(draw);
+  }
+  window.startNet = () => { if (!raf && !reduce) raf = requestAnimationFrame(draw); };
+})();
+
 /* ---------- speaker notes (pop-out window for the laptop, or N for an on-stage drawer) ---------- */
 function notesFor(view) {
   const subs = submitted().length, reg = groupsInPlay().filter(n => S.tables[tid(n)]).length, t = tally(), top = t.rows[0];
@@ -901,6 +1037,14 @@ function notesFor(view) {
       P('The easiest way to start is one sentence: <b>"Build me a single HTML file that…"</b> and describe it. If it\'s not quite right, just tell it what to change.'),
       P('One rule: <b>use made-up numbers and names.</b> No patient information and nothing confidential.'),
       P('Then each table walks us through what they built, and every table votes for the best one.'),
+      CUE('Click “Watch AI build one live”.')]],
+    demo: ['Live demo · about 30 seconds', [
+      P('Before you start, let me show you how fast this is.'),
+      P('This is the whole prompt. One sentence: <b>“Build me a single HTML file where I paste last month\'s numbers and it creates a red / yellow / green scorecard I can print.”</b>'),
+      CUE('Let the code stream. Point at the line counter.'),
+      P('That\'s the AI writing the code. Every line of it. No developer, no ticket.'),
+      CUE('The working app appears. Click into the numbers and change one, e.g. Days in A/R from 52 to 44.'),
+      P('And it works. Change a number and the scorecard updates. That took seconds. You\'ve got fifteen minutes.'),
       CUE('Click “Launch the challenge”. Registration opens and the QR code appears.')]],
     collect: ['Build · 15 minutes', [
       CUE(`${reg} tables registered · ${subs} submitted`),
@@ -932,6 +1076,7 @@ function notesFor(view) {
       P('Remember the show of hands at the start? Most of you said you use AI like a smarter Google search. You ask a question, you get an answer, and then you still do all the work yourself.'),
       P('What you did today is different. You described what you needed, and AI built it with you. That\'s the shift: <b>AI isn\'t a search engine. It\'s a teammate.</b>'),
       P('And it\'s not just apps. It can draft the email, the policy or the SOP. It can analyze the report you dread every month. It can build the tracker or the form your team keeps asking for. And it can automate the thing you do by hand every single week.'),
+      P('And by the way: this website you\'ve been using today, the timer, the QR codes, the voting, these slides, I built it with AI too.'),
       P('So here\'s my ask. Go back to your teams and pick one task you repeat every week. Before you do it by hand again, ask AI to help you build the fix. And if it\'s bigger than one table can handle, bring it to me. That\'s what informatics is here for.'),
       P(`Congratulations again to <b>${winner}</b>, and thank you all!`)]],
   };
@@ -1142,7 +1287,7 @@ function openStage() {
   const el = document.documentElement; if (el.requestFullscreen && !document.fullscreenElement) el.requestFullscreen().catch(() => {});
   pokeDock();
 }
-function closeStage() { S.stage = false; S.drawer = false; document.body.style.overflow = ''; if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); render(); }
+function closeStage() { S.stage = false; S.drawer = false; stopDemo(); document.body.style.overflow = ''; if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); render(); }
 function stageGo(i) { const n = submitted().length; if (!n) return; S.si = (i + n) % n; renderStage(); }
 let dockT;
 function pokeDock() { const d = $('#dock'); d.classList.remove('hide'); clearTimeout(dockT); dockT = setTimeout(() => { if (!d.matches(':hover')) d.classList.add('hide'); }, 3000); }
@@ -1169,6 +1314,8 @@ document.addEventListener('click', e => {
     if (s === 'closing') { S.slide = 'closing'; return renderStage(); }
     if (s === 'back') { S.slide = null; return renderStage(); }
     if (s === 'notes') return openNotes();
+    if (s === 'demo') { S.slide = 'demo'; return renderStage(); }
+    if (s === 'replay') return runDemo();
   }
 });
 $('#openStage').addEventListener('click', openStage);
