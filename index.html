@@ -162,7 +162,14 @@ td.clip{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowra
 .vidbox .row b{font-size:17px}
 .vidframe{position:relative;width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000;box-shadow:0 20px 60px rgba(0,0,0,.5)}
 .vidframe iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.peek{justify-self:start}
+.peek{justify-self:start;font:600 12px/1.3 ui-monospace,Consolas,"SF Mono",monospace;color:var(--muted);background:transparent;border:1px dashed var(--line);border-radius:8px;padding:7px 10px}
+.peek:hover:not(:disabled){color:var(--ink);border-color:var(--muted)}
+.vidframe video{position:absolute;inset:0;width:100%;height:100%;background:#000}
+.vidload{position:absolute;inset:0;display:grid;place-items:center;align-content:center;gap:14px;color:#bfe3f1;font:600 15px/1.4 ui-monospace,Consolas,monospace}
+.vidload .pbar{width:min(320px,70%);height:6px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}
+.vidload .pbar i{display:block;height:100%;width:0;background:#f68b1e;animation:pfill 1.3s ease-in forwards}
+@keyframes pfill{to{width:100%}}
+.caught{justify-self:center;color:#fff;font-weight:800;font-size:18px;text-align:center}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--navy);color:#fff;padding:11px 18px;border-radius:12px;font-size:14px;font-weight:600;z-index:200;max-width:calc(100% - 32px);box-shadow:0 8px 24px rgba(0,0,0,.25)}
 
 /* ===== presenter stage (always dark, built for a projector) ===== */
@@ -425,7 +432,7 @@ td.clip{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowra
         <li>Save it as a <strong>.html</strong> file, then upload it below before the timer runs out.</li>
       </ol>
     </div>
-    <button class="sm peek" id="peekBtn" type="button">👀 Thinking of copying another table?</button>
+    <button class="sm peek" id="peekBtn" type="button">🔑 host preview: view other tables' submissions →</button>
     <div class="drop" id="drop">
       <div class="two" style="width:100%">
         <div class="field"><label for="titleInput">Project name</label><input type="text" id="titleInput" maxlength="80" placeholder="e.g. Shift Swap Board"></div>
@@ -484,11 +491,11 @@ td.clip{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowra
   <div class="notes-drawer" id="notesDrawer" hidden></div>
   <div class="confetti" id="confetti"></div>
 </div>
-<div id="vidModal" class="vidmodal" hidden role="dialog" aria-modal="true" aria-label="Video">
+<div id="vidModal" class="vidmodal" hidden role="dialog" aria-modal="true" aria-label="Other tables' submissions">
   <div class="vidbox">
-    <div class="row"><b>Hmm… 👀</b><button class="sm" id="vidClose">Close</button></div>
+    <div class="row"><b id="vidTitle">Host preview</b><button class="sm" id="vidClose">Close</button></div>
     <div class="vidframe" id="vidFrame"></div>
-    <a class="small" style="color:#bfe3f1;justify-self:center" href="https://youtu.be/HI8nIMRhuvo" target="_blank" rel="noopener">Video not playing? Open it on YouTube</a>
+    <div class="caught" id="vidCaught" hidden>Caught you 👀 Nice try. Back to building!</div>
   </div>
 </div>
 <div id="toast" class="toast" hidden></div>
@@ -1310,13 +1317,29 @@ let dockT;
 function pokeDock() { const d = $('#dock'); d.classList.remove('hide'); clearTimeout(dockT); dockT = setTimeout(() => { if (!d.matches(':hover')) d.classList.add('hide'); }, 3000); }
 
 /* ---------- fun video ---------- */
-const VIDEO_ID = 'HI8nIMRhuvo';
+let vidT;
 function openVideo() {
+  // fake "loading other tables" for a beat, then the reveal
   const box = $('#vidFrame');
-  box.innerHTML = `<iframe title="Video" src="https://www.youtube-nocookie.com/embed/${VIDEO_ID}?autoplay=1&playsinline=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+  $('#vidTitle').textContent = 'Host preview: all submissions';
+  $('#vidCaught').hidden = true;
+  box.innerHTML = `<div class="vidload"><span>Loading every table's project…</span><div class="pbar"><i></i></div></div>`;
+  // create and "unlock" the video inside the tap itself so phones allow sound when it plays a moment later
+  const v = document.createElement('video');
+  v.src = 'cheating.mp4'; v.playsInline = true; v.preload = 'auto'; v.controls = true; v.style.visibility = 'hidden';
+  box.appendChild(v);
+  v.play().then(() => { v.pause(); v.currentTime = 0; }).catch(() => {});
+  v.addEventListener('playing', () => { $('#vidTitle').textContent = '🚨 Busted'; });
+  v.addEventListener('ended', () => { $('#vidCaught').hidden = false; });
   $('#vidModal').hidden = false;
+  clearTimeout(vidT);
+  vidT = setTimeout(() => {
+    box.querySelector('.vidload')?.remove();
+    v.style.visibility = ''; v.currentTime = 0;
+    v.play().catch(() => { $('#vidTitle').textContent = '🚨 Busted (tap play)'; });
+  }, 1400);
 }
-function closeVideo() { $('#vidModal').hidden = true; $('#vidFrame').innerHTML = ''; }
+function closeVideo() { clearTimeout(vidT); $('#vidModal').hidden = true; $('#vidFrame').innerHTML = ''; }
 
 /* ---------- events ---------- */
 document.addEventListener('click', e => {
