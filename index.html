@@ -131,7 +131,8 @@ td.clip{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowra
 .two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:12px}
 @media (max-width:640px){.two{grid-template-columns:minmax(0,1fr)}.panel{padding:16px}}
 .bar{height:6px;border-radius:3px;background:var(--sunk);overflow:hidden;width:100%}
-.bar i{display:block;height:100%;background:var(--blue);width:0}
+.bar i{display:block;height:100%;background:var(--blue);width:0;transition:width .35s ease}
+.bar.doom{height:10px;border-radius:5px}.bar.doom i{background:linear-gradient(90deg,var(--blue),var(--orange))}
 .res{display:grid;gap:10px}
 .res .r{display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr) 44px;gap:12px;align-items:center}
 .res .r .g{font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -162,6 +163,8 @@ td.clip{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowra
 .vidbox .row b{font-size:17px}
 .vidframe{position:relative;width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000;box-shadow:0 20px 60px rgba(0,0,0,.5)}
 .vidframe iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.popbtn{background:linear-gradient(90deg,#f68b1e,#e84393,#008ec5);border:0;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+.popbtn:hover:not(:disabled){filter:brightness(1.08)}
 .peek{justify-self:start;font:600 12px/1.3 ui-monospace,Consolas,"SF Mono",monospace;color:var(--muted);background:transparent;border:1px dashed var(--line);border-radius:8px;padding:7px 10px}
 .peek:hover:not(:disabled){color:var(--ink);border-color:var(--muted)}
 .vidframe video{position:absolute;inset:0;width:100%;height:100%;background:#000}
@@ -341,6 +344,18 @@ td.clip{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowra
 .bust .vid{width:min(860px,72vw,calc(58vh * 16 / 9));aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:#000;box-shadow:0 0 0 4px rgba(255,107,94,.6),0 30px 80px rgba(0,0,0,.6)}
 .bust video{width:100%;height:100%;display:block}
 .bust .sub{font-size:clamp(16px,1.6vw,24px);color:#bfe3f1;font-weight:600}
+.stage.popped .s-body{animation:popShake .11s linear infinite}
+.stage.popped .s-body,.stage.popped .orb{animation-name:popShake;filter:saturate(2.2) hue-rotate(0deg)}
+.stage.popped .s-body{animation:popShake .11s linear infinite,popHue .7s linear infinite}
+.stage.popped .orb{animation:popHue .7s linear infinite;transform:scale(1.25)}
+.stage.popped .s-body *{font-family:"Comic Sans MS","Comic Sans","Chalkboard SE","Comic Neue",cursive !important}
+@keyframes popShake{0%{transform:translate(0,0) rotate(0)}25%{transform:translate(-6px,3px) rotate(-.6deg)}50%{transform:translate(5px,-4px) rotate(.5deg)}75%{transform:translate(-3px,-2px) rotate(-.3deg)}100%{transform:translate(0,0) rotate(0)}}
+@keyframes popHue{to{filter:saturate(2.2) hue-rotate(360deg)}}
+.popcap{position:absolute;left:50%;bottom:12%;transform:translateX(-50%);z-index:25;padding:16px 28px;border-radius:999px;background:#fff;color:#0b2b45;font-weight:800;font-size:clamp(18px,2vw,32px);white-space:nowrap;box-shadow:0 18px 50px rgba(0,0,0,.45);animation:popIn .5s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes popIn{from{transform:translateX(-50%) scale(.3);opacity:0}}
+.sparkle{position:absolute;z-index:24;pointer-events:none;font-size:clamp(22px,2.6vw,44px);animation:sparkle 1.6s ease-out forwards}
+@keyframes sparkle{from{opacity:1;transform:translate(0,0) scale(.4) rotate(0)}to{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1.3) rotate(260deg)}}
+@media (prefers-reduced-motion: reduce){.stage.popped .s-body,.stage.popped .orb{animation:none}}
 .notes-drawer{position:absolute;right:16px;top:70px;bottom:90px;width:min(460px,40vw);z-index:20;overflow:auto;padding:20px 22px;border-radius:16px;background:#04121c;isolation:isolate;border:1px solid rgba(255,255,255,.18);box-shadow:0 20px 60px rgba(0,0,0,.6);font-size:16px;line-height:1.55}
 @media (max-width:900px){.s-cards,.s-uses{grid-template-columns:repeat(2,minmax(0,1fr))}.s-compare{grid-template-columns:1fr}.s-compare .arrow{transform:rotate(90deg)}}
 @media (prefers-reduced-motion: reduce){.net{display:none}.caret,.dots i{animation:none}.s-huge.crit,.timesup{animation:none}.s-bars .track i{transition:none}.confetti{display:none}.rise,.s-body.enter > *{animation:none}.orb{transition:none}}
@@ -443,7 +458,8 @@ td.clip{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowra
         <li>Save it as a <strong>.html</strong> file, then upload it below before the timer runs out.</li>
       </ol>
     </div>
-    <button class="sm peek" id="peekBtn" type="button">🔑 host preview: view other tables' submissions →</button>
+    <div class="row" style="gap:8px"><button class="sm popbtn" id="popBtn" type="button">✨ Ask the AI to “make it pop”</button>
+    <button class="sm peek" id="peekBtn" type="button">🔑 host preview: view other tables' submissions →</button></div>
     <div class="drop" id="drop">
       <div class="two" style="width:100%">
         <div class="field"><label for="titleInput">Project name</label><input type="text" id="titleInput" maxlength="80" placeholder="e.g. Shift Swap Board"></div>
@@ -708,6 +724,7 @@ function renderMine() {
   $('#mineStatus').textContent = `Table ${p2(mt.table)} · Representative: ${mt.rep}. ` + (mt.fileName ? `Uploaded ${mt.fileName} at ${time(mt.submittedAt)}.` : 'Nothing uploaded yet.');
   $('#howto').hidden = ph !== 'collect';
   $('#peekBtn').hidden = ph !== 'collect';
+  $('#popBtn').hidden = ph !== 'collect';
   const drop = $('#drop'); drop.hidden = ph !== 'collect';
   drop.classList.toggle('locked', !open);
   $('#dropHead').textContent = open ? (mt.fileName ? 'Upload a newer version (optional)' : 'Upload your table\'s HTML file') : 'Time\'s up. Uploads are locked.';
@@ -792,7 +809,7 @@ function renderStage() {
     + phaseButtons(true) + (view === 'results' && !S.reveal ? '<button class="accent" data-s="reveal">🏆 Reveal winner</button>' : '')
     + (view === 'results' && S.reveal ? '<button class="accent" data-s="closing">Closing slide →</button>' : '')
     + (view === 'collect' && !S.cfg.timerEnd && S.cfg.timerLeft == null ? '<button data-s="welcome">← Welcome</button>' : '');
-  $('#dock').innerHTML = dock + `<span class="sep"></span><button data-s="testbust" title="Test the cheating pop-up">🚨</button><button data-s="notes">Notes</button><button data-s="fs">Full screen</button><button data-s="exit">Exit</button>`;
+  $('#dock').innerHTML = dock + `<span class="sep"></span><button data-s="testbust" title="Test the cheating pop-up">🚨</button><button data-s="testpop" title="Test make it pop">✨</button><button data-s="notes">Notes</button><button data-s="fs">Full screen</button><button data-s="exit">Exit</button>`;
   syncNotes();
 }
 const ICON = {
@@ -1224,6 +1241,16 @@ async function register() {
 function details() {
   return { title: $('#titleInput').value.trim().slice(0, 80), pitch: $('#pitchInput').value.trim().slice(0, 160) };
 }
+// the upload already succeeded; this is the comedy bit that plays before the confirmation
+const DOOM = [[12, 'Uploading your genius…', 450], [23, 'Routing to Legal for review…', 600], [41, 'Legal has questions…', 550],
+  [57, 'Waiting on budget approval…', 600], [72, 'Scheduling a meeting about the meeting…', 650], [88, 'Getting sign-off from someone on PTO…', 600],
+  [98, 'Almost there…', 700], [98, 'Almost there… (really)', 800], [99, 'Any second now…', 900]];
+async function corporateDoom(bar, msg) {
+  const fill = bar.firstElementChild; bar.hidden = false; bar.classList.add('doom');
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) { fill.style.width = '100%'; bar.classList.remove('doom'); return; }
+  for (const [pct, text, ms] of DOOM) { fill.style.width = pct + '%'; msg.textContent = `${text} ${pct}%`; await new Promise(r => setTimeout(r, ms)); }
+  fill.style.width = '100%'; await new Promise(r => setTimeout(r, 250)); bar.classList.remove('doom');
+}
 async function upload(file) {
   const msg = $('#upMsg'), bar = $('#upBar'), mt = myTable(); msg.style.color = '';
   if (!file || !mt) return;
@@ -1243,7 +1270,8 @@ async function upload(file) {
     await setDoc(doc(db, 'subs', mt.id), { table: mt.table, fileName: file.name, size: file.size, chunks: n, at });
     await updateDoc(doc(db, 'tables', mt.id), { fileName: file.name, chunks: n, submittedAt: at, title: d.title, pitch: d.pitch });
     $('#titleInput').dataset.dirty = $('#pitchInput').dataset.dirty = '';
-    msg.textContent = `Submitted “${d.title}”. It stays hidden until the showcase.`;
+    await corporateDoom(bar, msg);
+    msg.textContent = `✅ Approved! Nobody read it, but it's approved. “${d.title}” is in.`;
   } catch (e) { msg.style.color = 'var(--bad)'; msg.textContent = errText(e); }
   bar.hidden = true; $('#fileInput').value = ''; S.busy = false; render();
 }
@@ -1359,6 +1387,52 @@ async function reportBust() {
   }
 }
 
+/* ---------- "make it pop" ---------- */
+let popCool = 0;
+async function sendPop() {
+  const mt = myTable(), btn = $('#popBtn'); if (!mt || Date.now() < popCool) return;
+  popCool = Date.now() + 20000; btn.disabled = true; btn.textContent = '✨ Popping… look at the big screen';
+  setTimeout(() => { btn.disabled = false; btn.textContent = '✨ Ask the AI to “make it pop”'; }, 20000);
+  for (let i = 0; i < 2; i++) {
+    try { await setDoc(doc(db, 'pops', mt.id), { table: mt.table, at: Date.now() }); return; }
+    catch (e) { console.warn('pop failed', e && e.code); await new Promise(r => setTimeout(r, 1500)); }
+  }
+}
+const popSeen = {}; let popReady = false, popOn = false, popQueue = [];
+function onPops(q) {
+  q.forEach(d => { const v = d.data(), prev = popSeen[d.id]; popSeen[d.id] = v.at; if (popReady && v.at !== prev && !popQueue.includes(d.id)) popQueue.push(d.id); });
+  popReady = true; nextPop();
+}
+function popSound() {
+  try {
+    const a = new (window.AudioContext || window.webkitAudioContext)(), t0 = a.currentTime;
+    [523, 659, 784, 1047, 1319].forEach((f, i) => {
+      const o = a.createOscillator(), g = a.createGain(); o.type = 'triangle'; o.frequency.value = f; o.connect(g); g.connect(a.destination);
+      g.gain.setValueAtTime(.0001, t0 + i * .07); g.gain.exponentialRampToValueAtTime(.18, t0 + i * .07 + .02); g.gain.exponentialRampToValueAtTime(.0001, t0 + i * .07 + .35);
+      o.start(t0 + i * .07); o.stop(t0 + i * .07 + .4);
+    });
+  } catch {}
+}
+function nextPop() {
+  if (popOn || !popQueue.length) return;
+  const id = popQueue.shift(), n = Number(id.slice(1)), t = S.tables[id];
+  if (!S.stage) { toast(`✨ Table ${p2(n)} asked us to make it pop`); return nextPop(); }
+  popOn = true;
+  const st = $('#stage'); st.classList.add('popped'); popSound();
+  const cap = document.createElement('div'); cap.className = 'popcap';
+  cap.textContent = `✨ Table ${p2(n)}${t && t.title ? ' (' + t.title + ')' : ''} asked us to make it pop.`;
+  st.appendChild(cap);
+  const icons = ['✨', '⭐', '🌈', '💥', '🎉', '💫'];
+  for (let i = 0; i < 46; i++) {
+    const sp = document.createElement('span'); sp.className = 'sparkle'; sp.textContent = icons[i % icons.length];
+    sp.style.left = (10 + Math.random() * 80) + '%'; sp.style.top = (15 + Math.random() * 65) + '%';
+    sp.style.setProperty('--dx', (Math.random() * 300 - 150) + 'px'); sp.style.setProperty('--dy', (Math.random() * 260 - 200) + 'px');
+    sp.style.animationDelay = (Math.random() * 1.6) + 's'; st.appendChild(sp); setTimeout(() => sp.remove(), 3600);
+  }
+  setTimeout(() => { cap.textContent = '✨ Popped.'; }, 2600);
+  setTimeout(() => { st.classList.remove('popped'); cap.remove(); popOn = false; setTimeout(nextPop, 500); }, 3800);
+}
+
 /* ---------- projector: someone clicked the "host preview" link ---------- */
 const bustSeen = {}; let bustQueue = [], bustOn = false, bustReady = false;
 function onBusted(q) {
@@ -1413,6 +1487,7 @@ document.addEventListener('click', e => {
     if (s === 'closing') { S.slide = 'closing'; return renderStage(); }
     if (s === 'back') { S.slide = null; return renderStage(); }
     if (s === 'notes') return openNotes();
+    if (s === 'testpop') { popQueue.push(Object.keys(S.tables).sort()[0] || 't01'); return nextPop(); }
     if (s === 'testbust') { bustQueue.push(Object.keys(S.tables).sort()[0] || 't01'); return nextBust(); }
     if (s === 'demo') { S.slide = 'demo'; return renderStage(); }
     if (s === 'replay') return runDemo();
@@ -1420,6 +1495,7 @@ document.addEventListener('click', e => {
 });
 $('#openStage').addEventListener('click', openStage);
 $('#peekBtn').addEventListener('click', openVideo);
+$('#popBtn').addEventListener('click', sendPop);
 $('#vidClose').addEventListener('click', closeVideo);
 $('#vidModal').addEventListener('click', e => { if (e.target.id === 'vidModal') closeVideo(); });
 $('#openNotes').addEventListener('click', openNotes);
@@ -1484,7 +1560,15 @@ function subscribe() {
   }, fail));
   unsubs.push(onSnapshot(collection(db, 'tables'), q => { S.tables = {}; q.forEach(d => S.tables[d.id] = d.data()); render(); }, fail));
   unsubs.push(onSnapshot(collection(db, 'votes'), q => { S.votes = {}; q.forEach(d => S.votes[d.id] = d.data()); render(); }, fail));
-  if (S.isHost) listenBusted();
+  if (S.isHost) { listenBusted(); listenPops(); }
+}
+let popUnsub = null, popRetry;
+function listenPops() {
+  if (popUnsub) popUnsub();
+  popUnsub = onSnapshot(collection(db, 'pops'), onPops, e => {
+    S.bustErr = (e && e.code || '').includes('permission') ? '“Make it pop” can\'t reach this screen. Publish the latest firestore.rules, then refresh.' : S.bustErr;
+    render(); clearTimeout(popRetry); popRetry = setTimeout(listenPops, 8000);
+  });
 }
 let bustUnsub = null, bustRetry;
 function listenBusted() {
