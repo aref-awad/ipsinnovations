@@ -1030,7 +1030,7 @@ function runIntro() {
     <div class="i-term" id="iTerm"></div>
     <div class="i-name" id="iName"><h1 id="iH1">Mohammad Awad</h1><div class="i-role">Director, Corporate Informatics &amp; IPS/Coldwater Operations</div></div>
     <div class="i-cut" id="iCut"></div>
-    <div class="i-final" id="iFinal"><span class="k">Quarterly Leadership Meeting</span><h2>Let's build <em>something.</em></h2><span class="who">Mohammad Awad · Director, Corporate Informatics &amp; Pharmacy/Coldwater Operations</span></div>
+    <div class="i-final" id="iFinal"><span class="k">Quarterly Leadership Meeting</span><h2>Let's build <em>something.</em></h2><span class="who">Mohammad Awad · Director, Corporate Informatics &amp; IPS/Coldwater Operations</span></div>
     <div class="i-bars" id="iBars"></div><div class="i-flash" id="iFlash"></div>
   </div>`;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1046,7 +1046,7 @@ function runIntro() {
   at(T, () => { if (!$('#intro')) return; term.remove(); $('#iFlash').classList.add('go'); sfx('boom'); const n = $('#iName'); n.classList.add('show'); $('#iH1').classList.add('glitch'); scramble($('#iH1'), 0); });
   at(T + 900, () => $('#iName')?.classList.add('role'));
   at(T + 2600, () => $('#iName')?.classList.add('out'));
-  const words = [['Pharmacy.', 'w'], ['Revenue cycle.', 'o'], ['340B.', 'b'], ['Automation.', 'w'], ['AI.', 'o']];
+  const words = [['Insight Pharmacy Solutions.', 'w'], ['Revenue cycle.', 'o'], ['340B.', 'b'], ['Automation.', 'w'], ['AI.', 'o']];
   words.forEach(([w, c], i) => at(T + 3100 + i * 470, () => { const el = $('#iCut'); if (!el) return; el.textContent = w; el.className = 'i-cut ' + c; void el.offsetWidth; el.classList.add('go'); sfx('whoosh'); }));
   const END = T + 3100 + words.length * 470 + 250;     // final frame
   at(END, () => { if (!$('#intro')) return; $('#iCut')?.remove(); $('#iBars').classList.remove('on'); st.classList.add('i-end'); $('#iFinal').classList.add('show'); sfx('chord'); });
