@@ -65,6 +65,27 @@ button.primary{background:var(--blue);border-color:var(--blue);color:var(--blue-
 button.primary:hover:not(:disabled){filter:brightness(1.07);border-color:var(--blue)}
 button.accent{background:var(--orange);border-color:var(--orange);color:var(--orange-ink)}
 button.accent:hover:not(:disabled){filter:brightness(1.05);border-color:var(--orange)}
+body.remote-mode .wrap>section:not(#remote):not(#hostLogin){display:none!important}
+.remote{gap:14px}
+.rm-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.rm-link{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:var(--muted)}
+.rm-link::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--bad);flex:none}
+.rm-link.on{color:var(--ok)}.rm-link.on::before{background:var(--ok);box-shadow:0 0 0 4px color-mix(in srgb,var(--ok) 25%,transparent)}
+.rm-clock{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums}
+.rm-clock.warn{color:var(--warn)}.rm-clock.crit,.rm-clock.done{color:var(--bad)}
+#rmView{font-size:26px}
+.rm-acts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.rm-acts button{min-height:56px;font-size:16px}
+.rm-acts .wide{grid-column:1/-1}
+.rm-acts .big{min-height:92px;font-size:21px}
+.rm-proj{grid-column:1/-1;display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+.rm-proj button{flex:none;min-height:40px;font-size:13px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+.rm-proj button[aria-current="true"]{border-color:var(--orange);background:color-mix(in srgb,var(--orange) 16%,var(--surface))}
+.rm-notes{border-top:1px solid var(--line);padding-top:12px;font-size:16px;line-height:1.55}
+.rm-notes summary{font-weight:800;cursor:pointer;margin-bottom:8px}
+.rm-notes .nh{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);margin-bottom:8px}
+.rm-notes p{margin:0 0 12px}.rm-notes .cue{color:var(--warn);font-weight:700;font-size:15px}
+.rm-notes h4{margin:14px 0 6px;color:var(--blue)}.rm-notes ul{margin:0 0 12px;padding-left:20px}.rm-notes li{margin-bottom:6px}
 button.danger{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 45%,transparent)}
 button.danger.solid{background:var(--bad);color:#fff;border-color:var(--bad)}
 button.ghost{border-color:transparent;background:transparent;padding-inline:9px}
@@ -446,6 +467,11 @@ td.clip{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowra
         <h3>Participant link</h3>
         <div class="join"><div class="qr" id="hostQr"></div><div style="display:grid;gap:8px;min-width:0"><span class="linkcode" id="shareLink"></span><button class="sm" id="copyLink" style="justify-self:start">Copy link</button></div></div>
       </div>
+      <div class="card">
+        <div class="row spread"><h3>📱 Phone remote</h3><span class="small" id="remoteState"></span></div>
+        <div class="join"><div class="qr" id="remoteQr"></div><div style="display:grid;gap:6px;min-width:0"><span class="linkcode" id="remoteLink"></span>
+          <span class="small muted">Open ▶ Presenter view here, then scan this on your phone and sign in with the host account. Your phone drives the slides and shows your speaker notes.</span></div></div>
+      </div>
     </div>
     <div>
       <div class="row spread" style="margin-bottom:8px"><h3>Tables</h3><span class="small muted" id="subCount"></span></div>
@@ -455,6 +481,15 @@ td.clip{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowra
       <div class="row spread" style="margin-bottom:8px"><h3>Live vote count (host only)</h3><span class="small muted" id="voteCount"></span></div>
       <div class="res" id="hostTally"></div>
     </div>
+  </section>
+
+  <!-- PHONE REMOTE (#remote) -->
+  <section id="remote" class="panel remote" hidden>
+    <div class="rm-top"><span class="rm-link" id="rmLink">Checking laptop…</span><span class="rm-clock" id="rmClock"></span></div>
+    <div><span class="eyebrow">On screen now</span><h2 id="rmView"></h2><p class="small muted" id="rmSub"></p></div>
+    <div class="rm-acts" id="rmActs"></div>
+    <details class="rm-notes" id="rmNotesBox" open><summary>Speaker notes</summary><div id="rmNotes"></div></details>
+    <div class="row spread"><button class="sm ghost" data-r="testbust">🚨 Test pop-up</button><a class="small" href="#host">Open host console</a></div>
   </section>
 
   <!-- REGISTER -->
@@ -575,12 +610,14 @@ const PHASES = { collect: 'Building', showcase: 'Showcase', voting: 'Voting open
 const ORDER = ['collect', 'showcase', 'voting', 'results'];
 const REVEALED = ph => ph === 'showcase' || ph === 'voting' || ph === 'results';
 const time = at => at ? new Date(at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
-const HOST_MODE = location.hash.replace('#', '').toLowerCase() === 'host';
+const HASH = location.hash.replace('#', '').toLowerCase();
+const REMOTE_MODE = HASH === 'remote';                 // phone remote for the presenter view
+const HOST_MODE = HASH === 'host' || REMOTE_MODE;
 const shareUrl = location.origin + location.pathname;
 
 const S = { cfg: { groups: 15, phase: 'collect', round: 1 }, cfgExists: false, open: false, tables: {}, votes: {}, uid: null, isHost: false,
   ready: false, busy: false, confirm: false, pick: null, fatal: '',
-  stage: false, slide: null, si: 0, reveal: false, showStart: 0, lastTimerState: '', drawer: false };
+  stage: false, slide: null, si: 0, reveal: false, showStart: 0, lastTimerState: '', drawer: false, remote: null, remoteErr: '' };
 const htmlCache = new Map();
 let db, auth, unsubs = [];
 
@@ -636,11 +673,11 @@ async function loadHtml(n) {
   if (!htmlCache.has(key)) htmlCache.set(key, prepare(await readChunks(tid(n), t.chunks)));
   return htmlCache.get(key);
 }
-function drawQr(el, size) {
+function drawQr(el, size, text = shareUrl) {
   if (!el || !window.QRCode) return;
-  const key = shareUrl + '|' + size; if (el.dataset.k === key) return;
+  const key = text + '|' + size; if (el.dataset.k === key) return;
   el.innerHTML = ''; el.dataset.k = key;
-  new QRCode(el, { text: shareUrl, width: size, height: size, colorDark: '#0b2b45', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+  new QRCode(el, { text, width: size, height: size, colorDark: '#0b2b45', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
   el.title = '';
 }
 
@@ -655,15 +692,16 @@ function render() {
   else mc.hidden = true;
   const n = $('#notice');
   if (S.fatal) { n.hidden = false; n.className = 'notice err'; n.textContent = S.fatal; }
-  else if (S.ready && S.isHost && S.bustErr) { n.hidden = false; n.className = 'notice err'; n.textContent = S.bustErr; }
+  else if (S.ready && S.isHost && S.remoteErr) { n.hidden = false; n.className = 'notice err'; n.textContent = S.remoteErr; }
+  else if (S.ready && S.isHost && S.bustErr && !REMOTE_MODE) { n.hidden = false; n.className = 'notice err'; n.textContent = S.bustErr; }
   else if (S.ready && S.isHost && !S.cfgExists) { n.hidden = false; n.className = 'notice'; n.textContent = 'First run: set the number of tables, then press Open registration.'; }
   else n.hidden = true;
   $('#hostLogin').hidden = !(HOST_MODE && !S.isHost && !S.fatal);
-  renderHost(); renderJoin(); renderMine(); renderBoard(); renderResults(); renderStage(); tick();
+  renderHost(); renderRemote(); renderJoin(); renderMine(); renderBoard(); renderResults(); renderStage(); tick();
 }
 
 function renderHost() {
-  $('#host').hidden = !S.isHost || !S.ready; if ($('#host').hidden) return;
+  $('#host').hidden = !S.isHost || !S.ready || REMOTE_MODE; if ($('#host').hidden) return;
   const ph = S.cfg.phase, c = S.open ? ORDER.indexOf(ph) : -1;
   document.querySelectorAll('#steps .step').forEach(el => {
     const i = ORDER.indexOf(el.dataset.p);
@@ -676,6 +714,7 @@ function renderHost() {
   if (!tl.options.length) tl.innerHTML = [5, 10, 12, 15, 20, 25, 30].map(m => `<option value="${m}">${m} min</option>`).join('');
   if (document.activeElement !== tl) tl.value = String(Math.round((S.cfg.timerMs || DEFAULT_MS) / MIN));
   $('#shareLink').textContent = shareUrl; drawQr($('#hostQr'), 110);
+  $('#remoteLink').textContent = (shareUrl + '#remote').replace(/^https?:\/\//, ''); drawQr($('#remoteQr'), 96, shareUrl + '#remote');
   $('#hostActs').innerHTML = phaseButtons(false);
   $('#timerActs').innerHTML = timerButtons(false);
   tl.disabled = S.busy || timer().state !== 'idle';
@@ -714,6 +753,109 @@ function timerButtons(dock) {
   if (t.state !== 'idle') a.push(`<button ${dock ? '' : 'class="ghost"'} data-t="reset" ${b}>Reset</button>`);
   return a.join('');
 }
+/* ---------- phone remote (#remote) ---------- */
+const VIEW_NAME = { intro: 'Intro animation', welcome: 'Welcome', demo: 'Live AI demo', collect: 'Build', showcase: 'Showcase', voting: 'Voting', results: 'Results', closing: 'Closing' };
+const remoteLive = () => { const R = S.remote; return !!(R && R.stage && Date.now() - (R.at || 0) < 60000); };
+function renderRemote() {
+  const box = $('#remote');
+  box.hidden = !(REMOTE_MODE && S.isHost && S.ready); if (box.hidden) return;
+  const R = S.remote || {}, live = remoteLive(), b = S.busy ? 'disabled' : '', off = live ? '' : 'disabled';
+  const view = live ? R.view : (S.open ? S.cfg.phase : 'collect');
+  const r = (c, label, cls = '', i) => `<button class="${cls}" data-r="${c}"${i != null ? ` data-i="${i}"` : ''} ${off}>${label}</button>`;
+  const subs = submitted(), t = timer(), A = [];
+  let sub = '';
+  if (view === 'intro') A.push(r('welcome', 'Next: Welcome →', 'accent big wide'), r('introReplay', '↻ Replay'), r('introSound', R.mute ? '🔇 Sound off' : '🔊 Sound on'));
+  else if (view === 'welcome') A.push(r('demo', 'Next: Watch AI build it →', 'accent big wide'), r('intro', '← Intro'), r('start', 'Skip to launch'));
+  else if (view === 'demo') A.push(r('start', 'Launch the challenge →', 'accent big wide'), r('welcome', '← Welcome'), r('replay', '↻ Replay demo'));
+  else if (view === 'closing') A.push(r('back', '← Back to results', 'wide'));
+  else if (!S.open) { sub = 'Everyone is on the waiting screen.'; A.push(`<button class="accent big wide" data-a="open" ${b}>Open registration${S.cfgExists ? ` (round ${S.cfg.round || 1})` : ''}</button>`); if (live) A.push(r('welcome', '← Welcome slide', 'wide')); }
+  else if (view === 'collect') {
+    const reg = groupsInPlay().filter(n => S.tables[tid(n)]).length;
+    sub = `${reg} registered · ${subs.length} submitted`;
+    if (t.state === 'idle') A.push(`<button class="accent big wide" data-t="start" ${b}>▶ Start ${fmt(t.dur)}</button>`);
+    else if (t.state === 'running') A.push(`<button class="accent big wide" data-t="pause" ${b}>❚❚ Pause timer</button>`);
+    else if (t.state === 'paused') A.push(`<button class="accent big wide" data-t="start" ${b}>▶ Resume timer</button>`);
+    A.push(`<button data-t="add" data-ms="${MIN}" ${b}>+1 min</button>`, `<button data-t="add" data-ms="${-MIN}" ${b || (t.state === 'done' ? 'disabled' : '')}>−1 min</button>`);
+    A.push(`<button class="primary wide" data-a="showcase" ${S.busy || !subs.length ? 'disabled' : ''}>Close submissions &amp; start showcase (${subs.length})</button>`);
+    if (t.state !== 'idle') A.push(`<button class="ghost" data-t="reset" ${b}>Reset timer</button>`);
+    if (t.state === 'idle' && live) A.push(r('welcome', '← Welcome'));
+  }
+  else if (view === 'showcase') {
+    const i = Math.min(Math.max(0, R.si || 0), Math.max(0, subs.length - 1)), cur = subs[i];
+    sub = cur ? `Table ${p2(cur)} · ${esc(projName(S.tables[tid(cur)]))} (${i + 1} of ${subs.length})` : 'No projects were submitted.';
+    A.push(r('prev', '‹ Prev', 'big'), r('next', 'Next ›', 'accent big'));
+    if (subs.length > 1) A.push(`<div class="rm-proj">${subs.map((n, k) => `<button data-r="go" data-i="${k}" aria-current="${live && k === i}" ${off}>T${p2(n)} · ${esc(projName(S.tables[tid(n)]))}</button>`).join('')}</div>`);
+    A.push(`<button class="primary wide" data-a="voting" ${b}>Open voting</button>`);
+  }
+  else if (view === 'voting') {
+    const voted = Object.keys(S.votes).filter(k => S.tables[k]).length, reg = groupsInPlay().filter(n => S.tables[tid(n)]).length;
+    sub = `${voted} of ${reg} tables have voted`;
+    A.push(`<button class="accent big wide" data-a="results" ${b}>Close voting &amp; show results</button>`, `<button class="wide" data-a="showcase" ${b}>Back to showcase</button>`);
+  }
+  else {
+    const tl = tally(), top = tl.rows[0];
+    if (top && top.c) sub = `Leader: ${esc(projName(S.tables[tid(top.n)]))} · Table ${p2(top.n)} (${top.c} vote${top.c === 1 ? '' : 's'})`;
+    A.push(R.reveal ? r('closing', 'Closing slide →', 'accent big wide') : r('reveal', '🏆 Reveal winner', 'accent big wide'));
+    A.push(`<button class="wide" data-a="voting" ${b}>Reopen voting</button>`);
+  }
+  $('#rmView').textContent = !S.open && !['intro', 'welcome', 'demo'].includes(view) ? 'Waiting for host' : (VIEW_NAME[view] || view);
+  $('#rmSub').innerHTML = sub || (live ? '' : 'Phase and timer buttons work now. Slide buttons wake up once the laptop is in Presenter view.');
+  const acts = A.join('');
+  if ($('#rmActs').dataset.sig !== acts) { $('#rmActs').innerHTML = acts; $('#rmActs').dataset.sig = acts; }
+  const notes = notesFor(view);
+  if ($('#rmNotes').dataset.sig !== notes) { $('#rmNotes').innerHTML = notes; $('#rmNotes').dataset.sig = notes; }
+  remoteTick();
+}
+function remoteTick() {
+  if (!REMOTE_MODE || $('#remote').hidden) return;
+  const live = remoteLive(), link = $('#rmLink');
+  link.className = 'rm-link' + (live ? ' on' : '');
+  link.textContent = live ? 'Laptop presenting' : 'Laptop not in Presenter view';
+  if (live !== S.rmLive) { S.rmLive = live; renderRemote(); return; }
+  const t = timer(), ck = $('#rmClock'), view = live ? S.remote.view : S.cfg.phase;
+  const showT = S.open && S.cfg.phase === 'collect' && view === 'collect' && t.state !== 'idle';
+  ck.textContent = showT ? (t.state === 'done' ? "Time's up" : fmt(t.left)) : new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  ck.className = 'rm-clock ' + (showT ? urgency(t) : '');
+}
+async function sendCmd(c, i) {
+  try { navigator.vibrate?.(12); } catch {}
+  try { await setDoc(doc(db, 'remote', 'cmd'), { c, i: i == null ? null : i, at: Date.now(), id: Math.random().toString(36).slice(2) }); }
+  catch (e) { toast((e.code || '').includes('permission') ? 'The remote needs the latest firestore.rules. Publish them in the Firebase console.' : errText(e)); }
+}
+/* laptop side: tell the phone what is on screen, and run what the phone sends */
+let pubSig = '', pubAt = 0;
+function pubStage() {
+  if (!S.isHost || REMOTE_MODE || !db || !S.ready) return;
+  if (!S.stage && !pubSig.includes('"stage":true')) return;   // only the screen that was presenting says it stopped
+  const d = { stage: !!S.stage, view: S.stage ? stageView() : null, si: S.si, reveal: !!S.reveal, mute: !!S.introMute };
+  const sig = JSON.stringify(d);
+  if (sig === pubSig && (!S.stage || Date.now() - pubAt < 20000)) return;
+  pubSig = sig; pubAt = Date.now();
+  setDoc(doc(db, 'remote', 'stage'), { ...d, at: Date.now() })
+    .then(() => { if (S.remoteErr) { S.remoteErr = ''; render(); } })
+    .catch(e => { pubSig = ''; if ((e.code || '').includes('permission')) { S.remoteErr = 'The phone remote can\'t connect. Publish the latest firestore.rules, then refresh.'; render(); } });
+}
+let cmdSeen = null, cmdUnsub = null, stUnsub = null;
+function listenRemote() {
+  if (REMOTE_MODE) {
+    stUnsub?.();
+    stUnsub = onSnapshot(doc(db, 'remote', 'stage'), s => { S.remote = s.exists() ? s.data() : null; S.remoteErr = ''; render(); }, e => {
+      S.remoteErr = (e.code || '').includes('permission') ? 'The phone remote can\'t connect. Publish the latest firestore.rules in the Firebase console, then refresh.' : 'Remote connection lost. Retrying…';
+      render(); setTimeout(listenRemote, 8000);
+    });
+    return;
+  }
+  cmdUnsub?.();
+  cmdUnsub = onSnapshot(doc(db, 'remote', 'cmd'), s => {
+    const v = s.exists() ? s.data() : null, id = v?.id || '';
+    if (cmdSeen === null) { cmdSeen = id; return; }          // ignore whatever was sent before this page opened
+    if (!v || id === cmdSeen) return;
+    cmdSeen = id;
+    if (!S.stage) { toast('📱 Phone remote: open ▶ Presenter view on this laptop first.'); return; }
+    pokeDock(); stageCmd(v.c, v.i);
+  }, () => setTimeout(listenRemote, 8000));
+}
+
 function tallyRows(t) {
   const max = Math.max(1, ...t.rows.map(r => r.c)), top = t.rows[0]?.c || 0;
   return t.rows.map(r => `<div class="r ${r.c && r.c === top ? 'lead' : ''}"><span class="g">${esc(projName(S.tables[tid(r.n)]))} <small>· T${p2(r.n)}</small></span><span class="track"><i style="width:${r.c / max * 100}%"></i></span><span class="c">${r.c}</span></div>`).join('');
@@ -802,7 +944,7 @@ function renderResults() {
 function stageView() { return S.slide || (S.open ? S.cfg.phase : 'collect'); }
 function renderStage() {
   const st = $('#stage');
-  if (!S.stage || !S.isHost) { st.hidden = true; syncNotes(); return; }
+  if (!S.stage || !S.isHost) { st.hidden = true; syncNotes(); pubStage(); return; }
   st.hidden = false;
   const body = $('#sBody'), view = stageView();
   st.dataset.view = view;
@@ -832,7 +974,7 @@ function renderStage() {
     + (view === 'results' && S.reveal ? '<button class="accent" data-s="closing">Closing slide →</button>' : '')
     + (view === 'collect' && !S.cfg.timerEnd && S.cfg.timerLeft == null ? '<button data-s="welcome">← Welcome</button>' : '');
   $('#dock').innerHTML = dock + `<span class="sep"></span><button data-s="testbust" title="Test the cheating pop-up">🚨</button><button data-s="notes">Notes</button><button data-s="fs">Full screen</button><button data-s="exit">Exit</button>`;
-  syncNotes();
+  syncNotes(); pubStage();
 }
 const ICON = {
   users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
@@ -1265,7 +1407,10 @@ function tick() {
     $('#tbarLabel').textContent = t.state === 'idle' ? 'Timer starts when the host says go' : t.state === 'paused' ? 'Timer paused' : t.state === 'done' ? 'Time\'s up! Uploads are locked' : 'Time left to build & submit';
     $('#tbarProg').style.width = (t.state === 'idle' ? 0 : (1 - t.left / Math.max(t.dur, t.left)) * 100) + '%';
   }
+  if (S.stage) pubStage();
+  remoteTick();
   if (S.isHost && !$('#host').hidden) {
+    const rs = $('#remoteState'); rs.textContent = S.stage ? 'Presenter view is on' : 'Presenter view is off'; rs.style.color = S.stage ? 'var(--ok)' : 'var(--muted)';
     const h = $('#hostTimer'); h.textContent = fmt(t.left); h.className = 'timerbig ' + u;
     $('#timerState').textContent = { idle: 'Not started', running: 'Running', paused: 'Paused', done: 'Time\'s up' }[t.state];
   }
@@ -1283,7 +1428,7 @@ function tick() {
   const sig = t.state + '|' + ph;
   if (S.lastTimerState && S.lastTimerState !== sig) {
     if (t.state === 'done' && S.lastTimerState.startsWith('running') && ph === 'collect') timesUp();
-    S.lastTimerState = sig; renderMine(); if (S.isHost) { renderHost(); if (S.stage) renderStage(); }
+    S.lastTimerState = sig; renderMine(); if (S.isHost) { renderHost(); renderRemote(); if (S.stage) renderStage(); }
   }
   S.lastTimerState = sig;
   notesClock();
@@ -1515,19 +1660,26 @@ document.addEventListener('click', e => {
   if (t.dataset.a) return hostAction(t.dataset.a);
   if (t.dataset.t) return timerAction(t.dataset.t, Number(t.dataset.ms || 0));
   if (t.dataset.release) return release(Number(t.dataset.release));
+  if (t.dataset.r) return sendCmd(t.dataset.r, t.dataset.i != null ? Number(t.dataset.i) : null);
   if (t.dataset.s) {
     const s = t.dataset.s;
     if (s === 'exit') return closeStage();
     if (s === 'fs') { const el = document.documentElement; return document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen?.().catch(() => toast('Full screen isn\'t available here.')); }
+    if (s === 'notes') return openNotes();
+    return stageCmd(s, t.dataset.i != null ? Number(t.dataset.i) : null);
+  }
+});
+/* presenter-view commands: from the dock buttons on the laptop, or from the phone remote */
+function stageCmd(s, i) {
+  {
     if (s === 'prev') return stageGo(S.si - 1);
     if (s === 'next') return stageGo(S.si + 1);
-    if (s === 'go') return stageGo(Number(t.dataset.i));
+    if (s === 'go') return stageGo(Number(i));
     if (s === 'reveal') { S.reveal = true; renderStage(); confetti(); return; }
     if (s === 'start') { S.slide = null; if (!S.open) return hostAction('open'); return renderStage(); }
     if (s === 'welcome') { S.slide = 'welcome'; return renderStage(); }
     if (s === 'closing') { S.slide = 'closing'; return renderStage(); }
     if (s === 'back') { S.slide = null; return renderStage(); }
-    if (s === 'notes') return openNotes();
     if (s === 'introReplay') return runIntro();
     if (s === 'intro') { S.slide = 'intro'; return renderStage(); }
     if (s === 'introSound') { S.introMute = !S.introMute; return renderStage(); }
@@ -1535,7 +1687,7 @@ document.addEventListener('click', e => {
     if (s === 'demo') { S.slide = 'demo'; return renderStage(); }
     if (s === 'replay') return runDemo();
   }
-});
+}
 $('#openStage').addEventListener('click', openStage);
 $('#peekBtn').addEventListener('click', openVideo);
 $('#vidClose').addEventListener('click', closeVideo);
@@ -1597,13 +1749,19 @@ function subscribe() {
   unsubs.forEach(u => u()); unsubs = [];
   const fail = () => { S.fatal = 'Lost connection to the board. Refresh the page.'; render(); };
   unsubs.push(onSnapshot(doc(db, 'config', 'state'), s => {
+    const prevPhase = S.ready ? S.cfg.phase : null;
     S.cfgExists = s.exists(); S.cfg = { groups: 15, phase: 'collect', round: 1, ...(s.exists() ? s.data() : {}) };
     S.open = S.cfgExists && S.cfg.phase !== 'waiting';
+    if (prevPhase && prevPhase !== S.cfg.phase && S.cfg.phase !== 'waiting') {   // phase changed (from here or the phone remote)
+      if (S.slide) S.slide = null;
+      if (S.cfg.phase === 'showcase' && prevPhase === 'collect') S.si = 0;
+      if (S.cfg.phase === 'results') S.reveal = false;
+    }
     S.ready = true; render(); if (!$('#viewer').hidden) syncVote();
   }, fail));
   unsubs.push(onSnapshot(collection(db, 'tables'), q => { S.tables = {}; q.forEach(d => S.tables[d.id] = d.data()); render(); }, fail));
   unsubs.push(onSnapshot(collection(db, 'votes'), q => { S.votes = {}; q.forEach(d => S.votes[d.id] = d.data()); render(); }, fail));
-  if (S.isHost) listenBusted();
+  if (S.isHost) { listenRemote(); if (!REMOTE_MODE) listenBusted(); }
 }
 let bustUnsub = null, bustRetry;
 function listenBusted() {
@@ -1614,6 +1772,13 @@ function listenBusted() {
   });
 }
 
+if (REMOTE_MODE) {
+  document.body.classList.add('remote-mode');
+  // keep the phone screen awake while it is the remote
+  let lock = null;
+  const wake = async () => { try { if (!lock && document.visibilityState === 'visible') { lock = await navigator.wakeLock?.request('screen'); lock?.addEventListener('release', () => lock = null); } } catch {} };
+  document.addEventListener('click', wake); document.addEventListener('visibilitychange', wake);
+}
 if (firebaseConfig.apiKey.startsWith('PASTE')) {
   S.fatal = 'Setup isn\'t finished: paste your Firebase config into index.html.'; render();
 } else {
