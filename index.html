@@ -365,6 +365,38 @@ td.clip{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowra
 .bust .sub{font-size:clamp(16px,1.6vw,24px);color:#bfe3f1;font-weight:600}
 /* ===== cinematic intro ===== */
 .stage[data-view="intro"] .s-top{opacity:0}
+/* standby: AI core idling until the presenter starts the intro */
+.stage[data-view="standby"] .s-top{opacity:0}
+.stage[data-view="standby"] .orb.b{left:58%;top:-38%;width:60vw;height:60vw}
+.stage[data-view="standby"] .orb.o{left:-24%;top:48%;width:48vw;height:48vw}
+.s-standby{flex:1;display:grid;place-items:center;align-content:center;gap:clamp(18px,3.4vh,36px);text-align:center}
+.sb-core{position:relative;width:min(36vh,360px);aspect-ratio:1}
+.sb-core > i{position:absolute;inset:0;border-radius:50%;border:2px solid transparent}
+.sb-core .r1{border-top-color:#38b2e6;border-right-color:rgba(56,178,230,.25);animation:sbSpin 3.4s linear infinite}
+.sb-core .r2{inset:9%;border-width:3px;border-bottom-color:#f68b1e;border-left-color:rgba(246,139,30,.25);animation:sbSpin 5s linear infinite reverse}
+.sb-core .r3{inset:18%;border:1px dashed rgba(191,227,241,.35);animation:sbSpin 22s linear infinite}
+.sb-core .r4{inset:-8%;border:1px solid rgba(56,178,230,.12);animation:sbPing 3.2s ease-out infinite}
+.sb-core .r5{inset:-8%;border:1px solid rgba(246,139,30,.12);animation:sbPing 3.2s ease-out 1.6s infinite}
+.sb-core .core{inset:29%;border:0;background:radial-gradient(circle at 36% 30%,#e6f7ff 0,#7fd3f5 14%,#38b2e6 34%,#0b4f7a 68%,#071d30 100%);box-shadow:0 0 70px 14px rgba(56,178,230,.45),0 0 160px 50px rgba(246,139,30,.14);animation:sbBreathe 3.4s ease-in-out infinite}
+.sb-orbit{position:absolute;inset:0;animation:sbSpin 6s linear infinite}
+.sb-orbit.b{inset:12%;animation-duration:9s;animation-direction:reverse}
+.sb-orbit > b{position:absolute;top:-6px;left:calc(50% - 6px);width:12px;height:12px;border-radius:50%;background:#f68b1e;box-shadow:0 0 16px 3px rgba(246,139,30,.8)}
+.sb-orbit.b > b{background:#38b2e6;box-shadow:0 0 16px 3px rgba(56,178,230,.8);width:9px;height:9px}
+.sb-wave{display:flex;align-items:center;gap:5px;height:44px}
+.sb-wave i{width:5px;border-radius:3px;background:linear-gradient(#38b2e6,#f68b1e);height:20%;animation:sbWave 1.3s ease-in-out infinite}
+.sb-k{font-size:clamp(14px,1.3vw,19px);font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:#f68b1e}
+.sb-title{margin:0;font-size:clamp(46px,7.4vw,118px);font-weight:800;letter-spacing:-.03em;line-height:1;background:linear-gradient(90deg,#fff 0%,#fff 30%,#7fd3f5 45%,#f68b1e 55%,#fff 70%,#fff 100%);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:sbShine 7s linear infinite}
+.sb-status{min-height:1.5em;font:600 clamp(17px,1.8vw,26px)/1.4 ui-monospace,"SF Mono",Consolas,monospace;color:#bfe3f1}
+.sb-status::before{content:"> ";color:#38b2e6}
+.sb-status::after{content:"▍";color:#f68b1e;animation:blink 1s steps(1) infinite;margin-left:2px}
+.sb-foot{position:absolute;left:0;right:0;bottom:26px;display:flex;justify-content:center;align-items:center;gap:12px;font-size:clamp(12px,1.1vw,15px);font-weight:800;letter-spacing:.3em;text-transform:uppercase;color:rgba(191,227,241,.7)}
+.sb-foot::before{content:"";width:10px;height:10px;border-radius:50%;background:#f68b1e;animation:pulse 1.6s ease-in-out infinite}
+@keyframes sbSpin{to{transform:rotate(360deg)}}
+@keyframes sbPing{0%{transform:scale(.7);opacity:0}30%{opacity:1}100%{transform:scale(1.35);opacity:0}}
+@keyframes sbBreathe{50%{transform:scale(1.07);filter:brightness(1.25)}}
+@keyframes sbWave{50%{height:100%}}
+@keyframes sbShine{to{background-position:-300% 0}}
+@media (prefers-reduced-motion: reduce){.s-standby *,.s-standby *::before,.s-standby *::after{animation:none!important}}
 .stage[data-view="intro"] .orb,.stage[data-view="intro"] .net{opacity:0;transition:opacity 1.2s}
 .stage[data-view="intro"].i-end .orb{opacity:1}.stage[data-view="intro"].i-end .net{opacity:.55}
 .s-intro{position:fixed;inset:0;z-index:3;display:grid;place-items:center;overflow:hidden;background:#02080f;color:#fff;transition:background 1.2s}
@@ -754,7 +786,7 @@ function timerButtons(dock) {
   return a.join('');
 }
 /* ---------- phone remote (#remote) ---------- */
-const VIEW_NAME = { intro: 'Intro animation', welcome: 'Welcome', demo: 'Live AI demo', collect: 'Build', showcase: 'Showcase', voting: 'Voting', results: 'Results', closing: 'Closing' };
+const VIEW_NAME = { standby: 'Standby screen', intro: 'Intro animation', welcome: 'Welcome', demo: 'Live AI demo', collect: 'Build', showcase: 'Showcase', voting: 'Voting', results: 'Results', closing: 'Closing' };
 const remoteLive = () => { const R = S.remote; return !!(R && R.stage && Date.now() - (R.at || 0) < 60000); };
 function renderRemote() {
   const box = $('#remote');
@@ -764,7 +796,8 @@ function renderRemote() {
   const r = (c, label, cls = '', i) => `<button class="${cls}" data-r="${c}"${i != null ? ` data-i="${i}"` : ''} ${off}>${label}</button>`;
   const subs = submitted(), t = timer(), A = [];
   let sub = '';
-  if (view === 'intro') A.push(r('welcome', 'Next: Welcome →', 'accent big wide'), r('introReplay', '↻ Replay'), r('introSound', R.mute ? '🔇 Sound off' : '🔊 Sound on'));
+  if (view === 'standby') { sub = 'The room sees the AI standby screen.'; A.push(r('intro', '▶ Start the show', 'accent big wide'), r('welcome', 'Skip intro → Welcome', 'wide')); }
+  else if (view === 'intro') A.push(r('welcome', 'Next: Welcome →', 'accent big wide'), r('introReplay', '↻ Replay'), r('introSound', R.mute ? '🔇 Sound off' : '🔊 Sound on'));
   else if (view === 'welcome') A.push(r('demo', 'Next: Watch AI build it →', 'accent big wide'), r('intro', '← Intro'), r('start', 'Skip to launch'));
   else if (view === 'demo') A.push(r('start', 'Launch the challenge →', 'accent big wide'), r('welcome', '← Welcome'), r('replay', '↻ Replay demo'));
   else if (view === 'closing') A.push(r('back', '← Back to results', 'wide'));
@@ -798,7 +831,7 @@ function renderRemote() {
     A.push(R.reveal ? r('closing', 'Closing slide →', 'accent big wide') : r('reveal', '🏆 Reveal winner', 'accent big wide'));
     A.push(`<button class="wide" data-a="voting" ${b}>Reopen voting</button>`);
   }
-  $('#rmView').textContent = !S.open && !['intro', 'welcome', 'demo'].includes(view) ? 'Waiting for host' : (VIEW_NAME[view] || view);
+  $('#rmView').textContent = !S.open && !['standby', 'intro', 'welcome', 'demo'].includes(view) ? 'Waiting for host' : (VIEW_NAME[view] || view);
   $('#rmSub').innerHTML = sub || (live ? '' : 'Phase and timer buttons work now. Slide buttons wake up once the laptop is in Presenter view.');
   const acts = A.join('');
   if ($('#rmActs').dataset.sig !== acts) { $('#rmActs').innerHTML = acts; $('#rmActs').dataset.sig = acts; }
@@ -955,7 +988,9 @@ function renderStage() {
   }
   if (view !== 'demo') stopDemo();
   if (view !== 'intro') { stopIntro(); st.classList.remove('i-end'); }
-  if (view === 'intro') stageIntro(body);
+  if (view !== 'standby') stopStandby();
+  if (view === 'standby') stageStandby(body);
+  else if (view === 'intro') stageIntro(body);
   else if (view === 'welcome') stageWelcome(body);
   else if (view === 'demo') stageDemo(body);
   else if (view === 'closing') stageClosing(body);
@@ -965,7 +1000,8 @@ function renderStage() {
   else stageResults(body);
   const b = S.busy ? 'disabled' : '';
   let dock;
-  if (view === 'intro') dock = `<button data-s="introReplay">↻ Replay</button><button data-s="introSound">${S.introMute ? '🔇 Sound off' : '🔊 Sound on'}</button><button class="accent" data-s="welcome">Next: welcome →</button>`;
+  if (view === 'standby') dock = `<button class="accent" data-s="intro">▶ Start intro</button><button data-s="welcome">Skip to welcome</button>`;
+  else if (view === 'intro') dock = `<button data-s="introReplay">↻ Replay</button><button data-s="introSound">${S.introMute ? '🔇 Sound off' : '🔊 Sound on'}</button><button class="accent" data-s="welcome">Next: welcome →</button>`;
   else if (view === 'welcome') dock = `<button data-s="intro">← Intro</button><button class="accent" data-s="demo">Next: watch AI build it →</button><button data-s="start" ${b}>Skip to launch</button>`;
   else if (view === 'demo') dock = `<button data-s="welcome">← Welcome</button><button data-s="replay">↻ Replay</button><button class="accent" data-s="start" ${b}>Launch the challenge →</button>`;
   else if (view === 'closing') dock = '<button data-s="back">← Back to results</button>';
@@ -1165,6 +1201,29 @@ function sfx(kind) {
     [196, 247, 294, 392].forEach((fr, i) => { const o = a.createOscillator(), g = a.createGain(); o.type = 'triangle'; o.frequency.value = fr; g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.12, t + .08 + i * .03); g.gain.exponentialRampToValueAtTime(.0001, t + 2.8); o.connect(g); g.connect(out); o.start(t); o.stop(t + 3); });
   }
 }
+let sbTimers = [];
+function stopStandby() { sbTimers.forEach(clearTimeout); sbTimers = []; }
+function stageStandby(body) {
+  if (body.firstChild) return;
+  const bars = Array.from({ length: 28 }, (_, i) => `<i style="animation-delay:${(-(i * 0.37) % 1.3).toFixed(2)}s;animation-duration:${(0.9 + (i * 7 % 5) * 0.12).toFixed(2)}s"></i>`).join('');
+  body.innerHTML = `<div class="s-standby">
+    <div class="sb-core" aria-hidden="true"><i class="r4"></i><i class="r5"></i><i class="r1"></i><i class="r2"></i><i class="r3"></i>
+      <div class="sb-orbit"><b></b></div><div class="sb-orbit b"><b></b></div><i class="core"></i></div>
+    <div style="display:grid;gap:14px;justify-items:center"><span class="sb-k">Quarterly Leadership Meeting</span><h1 class="sb-title">AI Build Challenge</h1></div>
+    <div class="sb-wave" aria-hidden="true">${bars}</div>
+    <div class="sb-status" id="sbStatus"></div>
+  </div><div class="sb-foot">Standing by</div>`;
+  const lines = ['Warming up the models…', 'Reading the room…', 'Brewing ideas for every table…', 'Turning prompts into prototypes…', 'Compiling creativity…', 'Calibrating executive presence…', 'Almost ready. Find your seats.'];
+  let li = 0;
+  const type = () => {
+    const el = $('#sbStatus'); if (!el) return;
+    const ln = lines[li++ % lines.length]; let i = 0;
+    const step = () => { if (!$('#sbStatus')) return; el.textContent = ln.slice(0, ++i); sbTimers.push(setTimeout(i < ln.length ? step : erase, i < ln.length ? 38 + Math.random() * 40 : 2600)); };
+    const erase = () => { if (!$('#sbStatus')) return; el.textContent = ln.slice(0, --i); sbTimers.push(setTimeout(i > 0 ? erase : type, i > 0 ? 14 : 350)); };
+    step();
+  };
+  stopStandby(); sbTimers.push(setTimeout(type, 500));
+}
 function stageIntro(body) { if (!body.firstChild) runIntro(); }
 function runIntro() {
   stopIntro();
@@ -1290,6 +1349,10 @@ function notesFor(view) {
   const winner = leaders.length ? leaders.map(r => `${esc(projName(S.tables[tid(r.n)]))} from Table ${p2(r.n)}`).join(' and ') : '[the winning table]';
   const P = s => `<p>${s}</p>`, CUE = s => `<p class="cue">${s}</p>`;
   const N = {
+    standby: ['Standby · before you start', [
+      CUE('This screen loops while people take their seats. Nothing moves on until you start it.'),
+      CUE('When you\'re ready: tap “▶ Start the show” on your phone (or “▶ Start intro” on the laptop). The intro plays with sound.'),
+      P('Tip: dim the lights a little and walk to the side of the stage before you tap.')]],
     intro: ['Intro · about 10 seconds', [
       CUE('Let it play. Don\'t talk over it. Walk to center stage while it runs.'),
       CUE('It ends on “Let\'s build something.” and holds there. Let it land for a beat.'),
@@ -1577,7 +1640,7 @@ async function timerAction(a, ms) {
 }
 function openStage() {
   S.stage = true; document.body.style.overflow = 'hidden'; $('#sBody').dataset.view = '';
-  S.slide = (!S.open || (S.cfg.phase === 'collect' && timer().state === 'idle' && !submitted().length)) ? 'intro' : null;
+  S.slide = (!S.open || (S.cfg.phase === 'collect' && timer().state === 'idle' && !submitted().length)) ? 'standby' : null;   // hold on standby until the presenter starts the intro
   render();
   const el = document.documentElement; if (el.requestFullscreen && !document.fullscreenElement) el.requestFullscreen().catch(() => {});
   pokeDock();
