@@ -430,7 +430,7 @@ td.clip{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowra
     <div class="row" id="hostActs"></div>
     <div id="hostProgress" class="small muted" hidden></div>
     <div id="confirmBox" class="confirm" hidden>
-      <span class="small"><strong>Start a new round?</strong> This deletes every submission and vote and resets the timer.</span>
+      <span class="small"><strong>Start a new round?</strong> This deletes every submission and vote, resets the timer, and sends everyone back to the waiting screen until you open registration again.</span>
       <label class="small row" style="gap:6px"><input type="checkbox" id="clearTables"> Also clear table registrations</label>
       <button class="danger solid" id="confirmReset">Delete and restart</button>
       <button class="ghost" id="cancelReset">Cancel</button>
@@ -578,7 +578,7 @@ const time = at => at ? new Date(at).toLocaleTimeString([], { hour: 'numeric', m
 const HOST_MODE = location.hash.replace('#', '').toLowerCase() === 'host';
 const shareUrl = location.origin + location.pathname;
 
-const S = { cfg: { groups: 15, phase: 'collect', round: 1 }, cfgExists: false, tables: {}, votes: {}, uid: null, isHost: false,
+const S = { cfg: { groups: 15, phase: 'collect', round: 1 }, cfgExists: false, open: false, tables: {}, votes: {}, uid: null, isHost: false,
   ready: false, busy: false, confirm: false, pick: null, fatal: '',
   stage: false, slide: null, si: 0, reveal: false, showStart: 0, lastTimerState: '', drawer: false };
 const htmlCache = new Map();
@@ -647,8 +647,8 @@ function drawQr(el, size) {
 /* ---------- render ---------- */
 function render() {
   const ph = S.cfg.phase;
-  $('#phaseChip').className = 'chip ' + (S.ready && S.cfgExists ? ph : '');
-  $('#phaseText').textContent = S.fatal ? 'Not connected' : !S.ready ? 'Connecting…' : !S.cfgExists ? 'Not open yet' : PHASES[ph];
+  $('#phaseChip').className = 'chip ' + (S.ready && S.open ? ph : '');
+  $('#phaseText').textContent = S.fatal ? 'Not connected' : !S.ready ? 'Connecting…' : !S.open ? 'Waiting for host' : PHASES[ph];
   const mt = myTable(), mc = $('#meChip');
   if (S.isHost) { mc.hidden = false; mc.textContent = 'Host'; }
   else if (mt) { mc.hidden = false; mc.textContent = `Table ${p2(mt.table)} · ${mt.rep}`; }
@@ -664,7 +664,7 @@ function render() {
 
 function renderHost() {
   $('#host').hidden = !S.isHost || !S.ready; if ($('#host').hidden) return;
-  const ph = S.cfg.phase, c = S.cfgExists ? ORDER.indexOf(ph) : -1;
+  const ph = S.cfg.phase, c = S.open ? ORDER.indexOf(ph) : -1;
   document.querySelectorAll('#steps .step').forEach(el => {
     const i = ORDER.indexOf(el.dataset.p);
     el.className = 'step' + (i === c ? ' on' : i < c ? ' done' : '');
@@ -696,12 +696,12 @@ function renderHost() {
 }
 function phaseButtons(dock) {
   const ph = S.cfg.phase, subs = submitted().length, b = S.busy ? 'disabled' : '', acts = [];
-  if (!S.cfgExists) acts.push(`<button class="primary" data-a="open" ${b}>Open registration</button>`);
+  if (!S.open) acts.push(`<button class="primary" data-a="open" ${b}>Open registration${S.cfgExists ? ` (round ${S.cfg.round || 1})` : ''}</button>`);
   else if (ph === 'collect') acts.push(`<button class="primary" data-a="showcase" ${S.busy || !subs ? 'disabled' : ''}>Close submissions &amp; start showcase (${subs})</button>`);
   else if (ph === 'showcase') { acts.push(`<button class="primary" data-a="voting" ${b}>Open voting</button>`); if (!dock) acts.push(`<button data-a="collect" ${b}>Back to building (hides projects)</button>`); }
   else if (ph === 'voting') { acts.push(`<button class="primary" data-a="results" ${b}>Close voting &amp; show results</button>`); acts.push(`<button data-a="showcase" ${b}>Back to showcase</button>`); }
   else acts.push(`<button data-a="voting" ${b}>Reopen voting</button>`);
-  if (S.cfgExists && !dock) acts.push(`<button class="danger" data-a="reset" ${b}>Start a new round</button>`);
+  if (S.open && !dock) acts.push(`<button class="danger" data-a="reset" ${b}>Start a new round</button>`);
   return acts.join('');
 }
 function timerButtons(dock) {
@@ -720,7 +720,7 @@ function tallyRows(t) {
 }
 
 function renderJoin() {
-  const show = S.ready && !HOST_MODE && !S.isHost && S.uid && !myTable() && S.cfgExists && S.cfg.phase === 'collect';
+  const show = S.ready && !HOST_MODE && !S.isHost && S.uid && !myTable() && S.open && S.cfg.phase === 'collect';
   $('#join').hidden = !show; if (!show) return;
   $('#pick').innerHTML = groupsInPlay().map(n => {
     const taken = !!S.tables[tid(n)];
@@ -752,13 +752,14 @@ function renderMine() {
   if (document.activeElement !== pi && !pi.dataset.dirty) pi.value = mt.pitch || '';
   ti.disabled = pi.disabled = $('#fileInput').disabled = S.busy || !open;
   $('#saveDetails').hidden = !mt.fileName; $('#saveDetails').disabled = S.busy || !open;
-  $('#mineActs').innerHTML = (mt.fileName ? `<button data-open="${mt.table}">Preview our upload</button>` : '') + (ph !== 'collect' ? '<span class="small muted">Submissions are closed.</span>' : '');
+  $('#mineActs').innerHTML = ph === 'waiting' ? '<span class="small muted">Waiting for the host to start the next round. This page updates by itself.</span>'
+    : (mt.fileName ? `<button data-open="${mt.table}">Preview our upload</button>` : '') + (ph !== 'collect' ? '<span class="small muted">Submissions are closed.</span>' : '');
 }
 
 function renderBoard() {
   const ph = S.cfg.phase, mt = myTable(), myVote = mt ? S.votes[mt.id] : null;
   if (!S.ready) { $('#boardSub').textContent = S.fatal ? '' : 'Loading…'; $('#grid').innerHTML = ''; return; }
-  if (!S.cfgExists) { $('#boardEyebrow').textContent = 'Not open yet'; $('#boardTitle').textContent = 'Tables'; $('#boardSub').textContent = 'The host hasn\'t opened registration yet. Keep this page open; it updates by itself.'; $('#grid').innerHTML = ''; return; }
+  if (!S.open) { $('#boardEyebrow').textContent = 'Waiting for host'; $('#boardTitle').textContent = S.cfgExists && (S.cfg.round || 1) > 1 ? 'Next round starting soon' : 'Tables'; $('#boardSub').textContent = 'The host hasn\'t opened registration yet. Keep this page open; it updates by itself.'; $('#grid').innerHTML = ''; return; }
   if (ph === 'collect') {
     $('#boardEyebrow').textContent = 'Submissions sealed'; $('#boardTitle').textContent = 'Who has submitted';
     $('#boardSub').textContent = 'Projects stay hidden until the showcase. You can only see which tables have turned something in.';
@@ -798,7 +799,7 @@ function renderResults() {
 }
 
 /* ---------- presenter stage ---------- */
-function stageView() { return S.slide || (S.cfgExists ? S.cfg.phase : 'collect'); }
+function stageView() { return S.slide || (S.open ? S.cfg.phase : 'collect'); }
 function renderStage() {
   const st = $('#stage');
   if (!S.stage || !S.isHost) { st.hidden = true; syncNotes(); return; }
@@ -1235,7 +1236,7 @@ function openNotes() {
   S.notesSig = ''; syncNotes();
 }
 function syncNotes() {
-  const view = S.stage ? stageView() : (S.cfgExists ? S.cfg.phase : 'welcome');
+  const view = S.stage ? stageView() : (S.open ? S.cfg.phase : 'welcome');
   const html = notesFor(view);
   const dr = $('#notesDrawer');
   dr.hidden = !(S.stage && S.drawer);
@@ -1254,7 +1255,7 @@ function notesClock() {
 
 /* ---------- 4x per second: timers and clocks ---------- */
 function tick() {
-  const t = timer(), u = urgency(t), ph = S.cfg.phase, show = S.ready && S.cfgExists && ph === 'collect' && !S.isHost;
+  const t = timer(), u = urgency(t), ph = S.cfg.phase, show = S.ready && S.open && ph === 'collect' && !S.isHost;
   const bar = $('#tbar');
   const barOn = show && (t.state !== 'idle' || !!myTable());
   bar.hidden = !barOn;
@@ -1270,7 +1271,7 @@ function tick() {
   }
   if (S.stage && !$('#stage').hidden) {
     const mini = $('#sMini');
-    mini.hidden = !(ph === 'collect' && t.state !== 'idle' && S.cfgExists) || !!$('#sBig');
+    mini.hidden = !(ph === 'collect' && t.state !== 'idle' && S.open) || !!$('#sBig');
     mini.textContent = fmt(t.left); mini.className = 's-mini ' + u;
     const big = $('#sBig');
     if (big) {
@@ -1391,8 +1392,9 @@ async function newRound() {
   try {
     for (const id of Object.keys(S.tables)) { progress(`Clearing table ${id.slice(1)}…`); await clearTable(id, all); }
     for (const id of Object.keys(S.votes)) await deleteDoc(doc(db, 'votes', id));
-    await setCfg({ phase: 'collect', round: (S.cfg.round || 1) + 1, timerEnd: 0, timerLeft: null });
-    htmlCache.clear(); S.reveal = false; S.si = 0; toast('New round started.');
+    await setCfg({ phase: 'waiting', round: (S.cfg.round || 1) + 1, timerEnd: 0, timerLeft: null });
+    htmlCache.clear(); S.reveal = false; S.si = 0; S.slide = S.stage ? 'welcome' : null;
+    toast('Reset. Everyone is back on the waiting screen. Press Open registration when you\'re ready.');
   } catch (e) { toast(errText(e)); }
   progress(''); $('#clearTables').checked = false; S.busy = false; render();
 }
@@ -1430,7 +1432,7 @@ async function timerAction(a, ms) {
 }
 function openStage() {
   S.stage = true; document.body.style.overflow = 'hidden'; $('#sBody').dataset.view = '';
-  S.slide = (!S.cfgExists || (S.cfg.phase === 'collect' && timer().state === 'idle' && !submitted().length)) ? 'intro' : null;
+  S.slide = (!S.open || (S.cfg.phase === 'collect' && timer().state === 'idle' && !submitted().length)) ? 'intro' : null;
   render();
   const el = document.documentElement; if (el.requestFullscreen && !document.fullscreenElement) el.requestFullscreen().catch(() => {});
   pokeDock();
@@ -1521,7 +1523,7 @@ document.addEventListener('click', e => {
     if (s === 'next') return stageGo(S.si + 1);
     if (s === 'go') return stageGo(Number(t.dataset.i));
     if (s === 'reveal') { S.reveal = true; renderStage(); confetti(); return; }
-    if (s === 'start') { S.slide = null; if (!S.cfgExists) return hostAction('open'); return renderStage(); }
+    if (s === 'start') { S.slide = null; if (!S.open) return hostAction('open'); return renderStage(); }
     if (s === 'welcome') { S.slide = 'welcome'; return renderStage(); }
     if (s === 'closing') { S.slide = 'closing'; return renderStage(); }
     if (s === 'back') { S.slide = null; return renderStage(); }
@@ -1572,7 +1574,7 @@ document.addEventListener('keydown', e => {
     if (e.key === 'n' || e.key === 'N') { S.drawer = !S.drawer; syncNotes(); }
     if (ph === 'showcase' && (e.key === 'ArrowRight' || e.key === 'PageDown')) { e.preventDefault(); stageGo(S.si + 1); }
     if (ph === 'showcase' && (e.key === 'ArrowLeft' || e.key === 'PageUp')) { e.preventDefault(); stageGo(S.si - 1); }
-    if (ph === 'collect' && S.cfgExists && e.key === ' ') { e.preventDefault(); const t = timer(); if (t.state === 'running') timerAction('pause'); else if (t.state !== 'done') timerAction('start'); }
+    if (ph === 'collect' && S.open && e.key === ' ') { e.preventDefault(); const t = timer(); if (t.state === 'running') timerAction('pause'); else if (t.state !== 'done') timerAction('start'); }
     if (e.key === 'f' || e.key === 'F') { const el = document.documentElement; document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen?.().catch(() => {}); }
     return;
   }
@@ -1596,6 +1598,7 @@ function subscribe() {
   const fail = () => { S.fatal = 'Lost connection to the board. Refresh the page.'; render(); };
   unsubs.push(onSnapshot(doc(db, 'config', 'state'), s => {
     S.cfgExists = s.exists(); S.cfg = { groups: 15, phase: 'collect', round: 1, ...(s.exists() ? s.data() : {}) };
+    S.open = S.cfgExists && S.cfg.phase !== 'waiting';
     S.ready = true; render(); if (!$('#viewer').hidden) syncVote();
   }, fail));
   unsubs.push(onSnapshot(collection(db, 'tables'), q => { S.tables = {}; q.forEach(d => S.tables[d.id] = d.data()); render(); }, fail));
